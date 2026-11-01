@@ -1,0 +1,44 @@
+# Python / Umgebung
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Betriebssystem / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Persönliche Daten – entstehen beim Benutzen und bleiben lokal
+daten/verlauf/
+daten/einstellungen.json
+daten/profile.json
+daten/phrasen_presets.json
+*.tmp
+
+# Texte: nur die mitgelieferten Übungstexte veröffentlichen.
+# Selbst hinzugefügte Texte (z. B. Liedtexte oder Artikel, die urheberrechtlich
+# geschützt sein können) bleiben automatisch privat.
+daten/texte/*
+!daten/texte/beispiel.txt
+!daten/texte/leicht_faultier.txt
+!daten/texte/leicht_honig.txt
+!daten/texte/leicht_mond.txt
+!daten/texte/leicht_oktopus.txt
+!daten/texte/mittel_eiffelturm.txt
+!daten/texte/mittel_kaffee.txt
+!daten/texte/mittel_tastatur.txt
+!daten/texte/mittel_wald.txt
+!daten/texte/schwer_duden.txt
+!daten/texte/schwer_herz.txt
+!daten/texte/schwer_sechzig.txt
+!daten/texte/schwer_wasser.txt
+!daten/texte/lang_de_bibliothek.txt
+!daten/texte/lang_de_gewohnheiten.txt
+!daten/texte/lang_de_stadtpark.txt
+!daten/texte/lang_en_citypark.txt
+!daten/texte/lang_en_library.txt
+!daten/texte/lang_en_practice.txt

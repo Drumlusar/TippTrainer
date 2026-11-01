@@ -1,0 +1,1 @@
+"""Dauerhafte Speicherung (CSV-Verlauf)."""

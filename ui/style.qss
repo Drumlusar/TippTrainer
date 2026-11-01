@@ -1,0 +1,278 @@
+/* Dunkles Theme, angelehnt an Monkeytype */
+
+QWidget {
+    background-color: #26272c;
+    color: #d8d6d0;
+    font-size: 15px;
+}
+
+QLabel#Title {
+    font-size: 34px;
+    font-weight: 600;
+    color: #e2b714;
+    padding: 8px;
+}
+
+QGroupBox {
+    border: 1px solid #3a3c43;
+    border-radius: 8px;
+    margin-top: 14px;
+    padding: 12px 10px 8px 10px;
+}
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 12px;
+    padding: 0 4px;
+    color: #8a8d96;
+}
+
+QCheckBox::indicator, QRadioButton::indicator {
+    width: 14px;
+    height: 14px;
+    border: 1px solid #8a8d96;
+    background-color: #1f2024;
+}
+QCheckBox::indicator { border-radius: 3px; }
+QRadioButton::indicator { border-radius: 8px; }
+QCheckBox::indicator:checked, QRadioButton::indicator:checked {
+    background-color: #e2b714;
+    border-color: #e2b714;
+}
+QCheckBox::indicator:disabled, QRadioButton::indicator:disabled { border-color: #44464e; }
+QRadioButton::indicator:checked:disabled { background-color: #6b5a1a; border-color: #6b5a1a; }
+
+QComboBox, QSpinBox {
+    background-color: #1f2024;
+    border: 1px solid #3a3c43;
+    border-radius: 5px;
+    padding: 4px 8px;
+    min-height: 22px;
+}
+QComboBox { padding-right: 30px; }
+QSpinBox { padding-right: 24px; }
+QSpinBox::up-button, QSpinBox::down-button {
+    subcontrol-origin: border;
+    width: 20px;
+    border: none;
+    border-left: 1px solid #3a3c43;
+    background: transparent;
+}
+QSpinBox::up-button   { subcontrol-position: top right; }
+QSpinBox::down-button { subcontrol-position: bottom right; }
+QSpinBox::up-button:hover, QSpinBox::down-button:hover { background: #33353b; }
+QSpinBox::up-arrow   { image: url("{UI_DIR}/arrow_up.svg");   width: 8px; height: 5px; }
+QSpinBox::down-arrow { image: url("{UI_DIR}/arrow_down.svg"); width: 8px; height: 5px; }
+QSpinBox::up-arrow:disabled   { image: url("{UI_DIR}/arrow_up_disabled.svg"); }
+QSpinBox::down-arrow:disabled { image: url("{UI_DIR}/arrow_down_disabled.svg"); }
+QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    width: 26px;
+    border: none;
+    border-left: 1px solid #3a3c43;
+}
+QComboBox::down-arrow { image: url("{UI_DIR}/arrow_down.svg"); width: 10px; height: 6px; }
+QComboBox::down-arrow:disabled { image: url("{UI_DIR}/arrow_down_disabled.svg"); }
+QComboBox QAbstractItemView {
+    background-color: #1f2024;
+    border: 1px solid #3a3c43;
+    selection-background-color: #3a3c43;
+    selection-color: #e8e6e1;
+    outline: none;
+    padding: 4px;
+}
+QComboBox QAbstractItemView::item { min-height: 26px; padding: 0 8px; }
+QComboBox:disabled, QSpinBox:disabled, QRadioButton:disabled, QCheckBox:disabled {
+    color: #5a5d65;
+}
+
+QPushButton {
+    background-color: #33353b;
+    border: 1px solid #44464e;
+    border-radius: 6px;
+    padding: 7px 18px;
+}
+QPushButton:hover { background-color: #3d3f46; }
+QPushButton:disabled { color: #5a5d65; }
+
+QPushButton#StartButton {
+    background-color: #e2b714;
+    color: #26272c;
+    font-size: 18px;
+    font-weight: 600;
+    padding: 10px;
+    border: none;
+}
+QPushButton#StartButton:hover { background-color: #f0c62a; }
+QPushButton#StartButton:disabled { background-color: #4a4a40; color: #26272c; }
+
+QLabel#Problems { color: #d8a24a; font-size: 13px; }
+
+QLabel#LiveValue {
+    font-size: 22px;
+    color: #e2b714;
+}
+QLabel#Hint {
+    color: #6c6f78;
+    font-size: 13px;
+}
+
+QLabel#EndTitle {
+    font-size: 40px;
+    font-weight: 600;
+    color: #e2b714;
+}
+QLabel#EndTitle[died="true"] { color: #f2545b; }
+QLabel#EndDetail { font-size: 20px; color: #d8d6d0; }
+QLabel#EndStats  { font-size: 18px; line-height: 150%; }
+
+/* --- Deathscreen / Ergebnis ------------------------------------------------ */
+QLabel#DeathTitle { font-size: 44px; font-weight: 600; color: #f2545b; }
+QLabel#ResultTitle { font-size: 30px; font-weight: 600; color: #e2b714; }
+QLabel#Snippet { color: #e8e6e1; padding: 6px; }
+
+QFrame#Tile {
+    background-color: #2d2f35;
+    border-radius: 8px;
+}
+QLabel#TileCaption { color: #8a8d96; font-size: 12px; background: transparent; }
+QLabel#TileValue   { color: #e8e6e1; font-size: 26px; font-weight: 600; background: transparent; }
+QLabel#TileSub     { color: #8a8d96; font-size: 11px; background: transparent; }
+
+QTextBrowser#ResultText {
+    background-color: #1f2024;
+    border: 1px solid #3a3c43;
+    border-radius: 8px;
+    padding: 8px;
+}
+
+/* --- Liste „Letzte Runden“ -------------------------------------------------- */
+QScrollArea#RunList, QWidget#RunListInner { background-color: transparent; }
+QFrame#RunRow {
+    background-color: #2d2f35;
+    border-radius: 6px;
+}
+QFrame#RunRow:hover { background-color: #363840; }
+QFrame#RunRow[dbm="true"] {
+    border-left: 4px solid #f2545b;
+    background-color: #322a2d;          /* leicht rötlich getönt */
+}
+QFrame#RunRow[dbm="true"]:hover { background-color: #3d3236; }
+QLabel#DbmBadge {
+    color: #f2545b;
+    border: 1px solid #f2545b;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    background: transparent;
+}
+QLabel#RunTop    { color: #e8e6e1; font-size: 13px; background: transparent; }
+QLabel#RunBottom { color: #8a8d96; font-size: 12px; background: transparent; }
+QToolButton#PinButton {
+    background: transparent;
+    border: none;
+    color: #6c6f78;
+    font-size: 20px;
+    padding: 0 6px;
+}
+QToolButton#PinButton:hover   { color: #e8e6e1; }
+QToolButton#PinButton:checked { color: #e2b714; }
+
+QScrollBar:vertical {
+    background: transparent;
+    width: 8px;
+    margin: 0;
+}
+QScrollBar::handle:vertical {
+    background: #44464e;
+    border-radius: 4px;
+    min-height: 30px;
+}
+QScrollBar::handle:vertical:hover { background: #5a5d65; }
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: none; }
+
+/* --- Reiter im Hauptmenü ---------------------------------------------------- */
+QTabWidget#MenuTabs::pane {
+    border: 1px solid #3a3c43;
+    border-radius: 8px;
+    top: -1px;
+    padding: 10px;
+}
+QTabBar::tab {
+    background: transparent;
+    color: #8a8d96;
+    padding: 8px 22px;
+    margin-right: 4px;
+    border: 1px solid transparent;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    font-size: 15px;
+}
+QTabBar::tab:selected {
+    color: #e2b714;
+    border-color: #3a3c43;
+    border-bottom-color: #26272c;
+    background: #26272c;
+}
+QTabBar::tab:hover:!selected { color: #e8e6e1; }
+
+QPlainTextEdit#PhraseEditor {
+    background-color: #1f2024;
+    border: 1px solid #3a3c43;
+    border-radius: 8px;
+    padding: 8px;
+    color: #e8e6e1;
+}
+
+QTableWidget#PhraseTable {
+    background-color: #1f2024;
+    border: 1px solid #3a3c43;
+    border-radius: 8px;
+    font-size: 13px;
+}
+QTableWidget#PhraseTable::item { padding: 2px 8px; }
+
+/* --- Highscores ---------------------------------------------------------------- */
+QTableWidget#ScoreTable {
+    background-color: #1f2024;
+    border: 1px solid #3a3c43;
+    border-radius: 8px;
+    font-size: 13px;
+    selection-background-color: #3a3c43;
+    selection-color: #e8e6e1;
+}
+QTableWidget#ScoreTable::item { padding: 3px 8px; }
+QLabel#SectionLabel { color: #e8e6e1; font-size: 15px; font-weight: 600; padding-top: 6px; }
+QLabel#RecordBadge {
+    color: #e2b714;
+    border: 1px solid #e2b714;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    background: transparent;
+}
+QLabel#RecordBanner {
+    color: #26272c;
+    background-color: #e2b714;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+QLabel#SubLabel { color: #8a8d96; padding-left: 26px; }
+QLabel#SubLabel:disabled { color: #5a5d65; }
+
+QLabel#NoStatsBadge {
+    color: #8a8d96;
+    border: 1px solid #5a5d65;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    background: transparent;
+}
+QCheckBox#StatsCheck { color: #8a8d96; }
