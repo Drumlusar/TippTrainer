@@ -73,3 +73,31 @@ def test_training_tab_profile_roundtrip(tmp_path):
     tab.death_check.setChecked(not tab.death_check.isChecked())   # Abweichung -> kein Profil
     assert store.matching(tab.current_settings()) == ""
     assert tab.profile_combo.currentIndex() == 0
+
+
+def test_darstellungs_einstellungen(tmp_path):
+    from storage.app_settings import AppSettings
+    s = AppSettings(tmp_path / "e.json")
+    assert (s.design, s.text_size, s.ui_scale, s.pace_on, s.pace_cpm) == ("Dunkel", 26, 100, False, 500.0)
+    s.design, s.text_size, s.ui_scale, s.pace_on, s.pace_cpm = "Hell", 99, 10, True, 300
+    s2 = AppSettings(tmp_path / "e.json")
+    assert (s2.design, s2.text_size, s2.ui_scale, s2.pace_on, s2.pace_cpm) == ("Hell", 60, 80, True, 300.0)
+    s.set("design", "Lila")
+    assert s.design == "Dunkel"
+
+
+def test_stylesheet_beide_designs_vollstaendig():
+    """Kein Platzhalter (@name) bleibt übrig; Schriftgrößen werden skaliert."""
+    import re
+    import pytest
+    pytest.importorskip("PySide6")
+    from ui import theme
+    try:
+        for name in theme.THEMES:
+            theme.set_theme(name)
+            qss = theme.load_stylesheet(1.5)
+            assert not re.search(r"@[a-z_]+", qss), name
+            assert theme.hexc("bg") in qss
+            assert "font-size: 51px" in qss          # Titel 34 px × 1,5
+    finally:
+        theme.set_theme(theme.DARK)

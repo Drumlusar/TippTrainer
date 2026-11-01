@@ -1,7 +1,7 @@
 """Reiter „Phrasen“: eigene Phrasen in Schleife üben, mit Presets.
 
 Eine Phrase pro Zeile. Ein Durchgang = alle Phrasen einmal, jeweils
-getrennt durch Enter. Eigene Einstellungen, unabhängig vom Reiter „Training“.
+getrennt durch eine Leertaste (jede Phrase steht trotzdem in eigener Zeile). Eigene Einstellungen, unabhängig vom Reiter „Training“.
 """
 from __future__ import annotations
 
@@ -150,20 +150,32 @@ class PhraseTab(QWidget):
     def _refresh(self) -> None:
         n = len(self.phrases())
         self.count_label.setText(f"{n} Phrase{'n' if n != 1 else ''}  ·  "
-                                 "Ein Durchgang = alle Phrasen einmal, getrennt durch Enter")
+                                 "Ein Durchgang = alle Phrasen einmal, getrennt durch eine Leertaste")
         self.reps_spin.setVisible(self.reps_combo.currentData() == -1)
         self.start_btn.setEnabled(n > 0)
-        has_preset = self.preset_combo.currentIndex() > 0
-        self.overwrite_btn.setEnabled(has_preset)
-        self.delete_btn.setEnabled(has_preset)
+        name = self._selected_name()
+        own = bool(name) and not self.presets.is_template(name)   # Vorlagen sind schreibgeschützt
+        self.overwrite_btn.setEnabled(own)
+        self.delete_btn.setEnabled(own)
+        tip = ("Mitgelieferte Vorlage – kann nicht überschrieben oder gelöscht werden. "
+               "Änderungen mit „Speichern unter …“ als eigenes Preset sichern.")
+        for btn in (self.overwrite_btn, self.delete_btn):
+            btn.setToolTip("" if own or not name else tip)
 
     # --- Presets ----------------------------------------------------------------------
 
     def _reload_presets(self, select: str = "") -> None:
         self.preset_combo.clear()
         self.preset_combo.addItem(NO_PRESET)
-        for name in self.presets.names():
+        for name in self.presets.own_names():
             self.preset_combo.addItem(name)
+        templates = self.presets.template_names()
+        if templates:
+            self.preset_combo.insertSeparator(self.preset_combo.count())
+            for name in templates:                     # mitgelieferte Vorlagen unten
+                self.preset_combo.addItem(name)
+                self.preset_combo.setItemData(self.preset_combo.count() - 1,
+                                              "Mitgelieferte Vorlage", Qt.ItemDataRole.ToolTipRole)
         idx = self.preset_combo.findText(select) if select else 0
         self.preset_combo.setCurrentIndex(max(0, idx))
         fit_combo(self.preset_combo)

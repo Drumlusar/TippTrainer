@@ -21,27 +21,15 @@ from PySide6.QtWidgets import (QComboBox, QHBoxLayout, QLabel,      # noqa: E402
 import config                                                       # noqa: E402
 from storage.progress import DayPoint, profile_progress             # noqa: E402
 from ui import units                                                # noqa: E402
-from ui.cpm_chart import BG, ERR, GRID, INK, LINE, MUTED            # noqa: E402
+from ui import theme                                                # noqa: E402
+from ui.cpm_chart import style_axes                                 # noqa: E402
 from ui.widgets import fit_combo                                    # noqa: E402
 
-DOT = "#8a7a3a"        # Tageswerte: gedämpftes Gold, Linie = kräftiges Gold
-ERR_DOT = "#8f4a4e"
-
-
-def _style(ax) -> None:
-    ax.set_facecolor(BG)
-    for side in ("top", "right"):
-        ax.spines[side].set_visible(False)
-    for side in ("left", "bottom"):
-        ax.spines[side].set_color(GRID)
-    ax.tick_params(colors=MUTED, labelsize=9, length=0, pad=6)
-    ax.grid(axis="y", color=GRID, linewidth=0.8)
-    ax.set_axisbelow(True)
 
 
 class ProgressChart(FigureCanvasQTAgg):
     def __init__(self, parent=None) -> None:
-        self.fig = Figure(figsize=(6, 4), facecolor=BG, layout="constrained")
+        self.fig = Figure(figsize=(6, 4), facecolor=theme.hexc("bg"), layout="constrained")
         super().__init__(self.fig)
         self.setParent(parent)
         self.ax_speed, self.ax_err = self.fig.subplots(
@@ -51,8 +39,12 @@ class ProgressChart(FigureCanvasQTAgg):
         a1, a2 = self.ax_speed, self.ax_err
         a1.clear()
         a2.clear()
-        _style(a1)
-        _style(a2)
+        self.fig.set_facecolor(theme.hexc("bg"))
+        style_axes(a1)
+        style_axes(a2)
+        # Tageswerte gedämpft, 7-Tage-Linie kräftig
+        MUTED, LINE, ERR, DOT, ERR_DOT, INK = (theme.hexc(k) for k in
+                                               ("dim", "accent", "error", "dot", "err_dot", "chart_ink"))
         if not points:
             for ax in (a1, a2):
                 ax.set_xticks([])

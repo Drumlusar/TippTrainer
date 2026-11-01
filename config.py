@@ -14,6 +14,7 @@ HISTORY_FILE = HISTORY_DIR / "sessions.csv"
 RUNS_DIR = HISTORY_DIR / "runs"          # eine JSON-Datei pro Runde (für die Endbildschirme)
 KEEP_RECENT_RUNS = 20                    # so viele nicht markierte Runden bleiben erhalten
 PRESETS_FILE = DATA_DIR / "phrasen_presets.json"
+PRESET_TEMPLATE_DIR = DATA_DIR / "phrasen_vorlagen"   # mitgelieferte Vorlagen, je Datei ein Preset
 SETTINGS_FILE = DATA_DIR / "einstellungen.json"
 STATS_FILE = HISTORY_DIR / "statistik.json"
 PROFILES_FILE = DATA_DIR / "profile.json"

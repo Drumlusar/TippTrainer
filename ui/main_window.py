@@ -5,7 +5,7 @@ from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtWidgets import QMainWindow, QMessageBox, QStackedWidget
+from PySide6.QtWidgets import QApplication, QDialog, QMainWindow, QMessageBox, QStackedWidget
 
 import config
 from core.models import SessionEnd, SessionResult
@@ -21,7 +21,8 @@ from core.models import SourceMode
 from storage.presets import PresetStore
 from storage.profiles import ProfileStore
 from storage.run_store import RunStore
-from ui import units
+from ui import theme, units
+from ui.settings_dialog import SettingsDialog
 from ui.death_view import DeathView
 from ui.menu_view import MenuView
 from ui.result_view import ResultView
@@ -51,6 +52,7 @@ class MainWindow(QMainWindow):
         self.settings = app_settings if app_settings is not None else AppSettings()
         self.stats_store = stats_store if stats_store is not None else StatsStore()
         units.set_unit(self.settings.unit)
+        theme.set_theme(self.settings.design)          # vor dem Aufbau der Ansichten
         self.profiles = profiles if profiles is not None else ProfileStore()
         self.menu = MenuView(self.library, presets, self.settings.penalty, self.stats_store,
                              self.profiles, history_file)
@@ -69,6 +71,8 @@ class MainWindow(QMainWindow):
         self.menu.highscores.open_attempt.connect(self.open_attempt)
         self.menu.highscores.open_profile_attempt.connect(self.open_profile_attempt)
         self.menu.unit_changed.connect(self.set_unit)
+        self.menu.settings_requested.connect(self.open_settings)
+        self.apply_appearance()
         self.menu.highscores.penalty_changed.connect(self.set_penalty)
         self.typing.finished.connect(self.on_finished)
         self.typing.aborted.connect(self.show_menu)
@@ -210,6 +214,27 @@ class MainWindow(QMainWindow):
         """Top 10 je Text und je Profil – deren Auswertungen werden nie aufgeräumt."""
         return (hs.protected_whens(hs.load_attempts(self.history_file), self.penalty)
                 | hs.protected_whens(hs.load_profile_attempts(self.history_file), self.penalty))
+
+    # --- Einstellungen ---------------------------------------------------------------
+
+    def apply_appearance(self) -> None:
+        """Design, Schriftgrößen und Tempo-Cursor aus den Einstellungen übernehmen."""
+        s = self.settings
+        theme.set_theme(s.design)
+        scale = s.ui_scale / 100
+        app = QApplication.instance()
+        if app is not None:
+            app.setStyleSheet(theme.load_stylesheet(scale))
+        self.typing.display.set_font_size(s.text_size)
+        self.typing.display.pace_cpm = s.pace_cpm if s.pace_on else None
+        self.result.text_pt = max(10, round(14 * scale))
+
+    def open_settings(self) -> None:
+        dlg = SettingsDialog(self.settings, self)
+        if dlg.exec() == QDialog.DialogCode.Accepted:
+            dlg.save()
+            self.apply_appearance()
+            self.show_menu()              # Listen und Diagramme in neuen Farben neu aufbauen
 
     def set_unit(self, unit: str) -> None:
         units.set_unit(unit)

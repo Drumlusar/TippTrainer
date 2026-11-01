@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
-from PySide6.QtWidgets import (QComboBox, QHBoxLayout, QLabel, QTabWidget,
+from PySide6.QtWidgets import (QComboBox, QHBoxLayout, QLabel, QPushButton, QTabWidget,
                                QVBoxLayout, QWidget)
 
 import config
@@ -35,6 +35,7 @@ class MenuView(QWidget):
     open_run_requested = Signal(str)     # Run-ID
     pin_run_requested = Signal(str, bool)
     unit_changed = Signal(str)
+    settings_requested = Signal()
 
     def __init__(self, library: TextLibrary, presets: PresetStore | None = None,
                  penalty: int = config.SCORE_PENALTY,
@@ -56,13 +57,23 @@ class MenuView(QWidget):
         fit_combo(self.unit_combo)
         unit_label = QLabel("Einheit:")
         unit_label.setObjectName("Hint")
+        self.settings_btn = QPushButton("Einstellungen …")
+        self.settings_btn.setToolTip("Design (dunkel/hell), Schriftgrößen, Tempo-Cursor")
+        self.settings_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.settings_btn.clicked.connect(self.settings_requested.emit)
+        right = QHBoxLayout()
+        right.addWidget(unit_label)
+        right.addWidget(self.unit_combo)
+        right.addSpacing(8)
+        right.addWidget(self.settings_btn)
+        right_w = (unit_label.sizeHint().width() + self.unit_combo.sizeHint().width()
+                   + self.settings_btn.sizeHint().width() + 20)
         head = QHBoxLayout()
-        head.addSpacing(self.unit_combo.sizeHint().width() + 60)   # Titel optisch mittig
+        head.addSpacing(right_w)                     # Titel optisch mittig
         head.addStretch(1)
         head.addWidget(title)
         head.addStretch(1)
-        head.addWidget(unit_label)
-        head.addWidget(self.unit_combo)
+        head.addLayout(right)
 
         self.profiles = profiles if profiles is not None else ProfileStore()
         self.training = TrainingTab(library, self.profiles)

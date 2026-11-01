@@ -12,17 +12,31 @@ from html import escape
 
 from core.models import CharState
 
-COLOR_TEXT = "#e8e6e1"
-COLOR_PENDING = "#6c6f78"
-COLOR_WRONG = "#f2545b"
-COLOR_ON_WRONG = "#26272c"
+# Farben des aktuellen Designs; ui/theme.py setzt sie beim Wechsel über set_colors().
+# (Dieses Modul bleibt ohne Qt und damit ohne PySide6 testbar.)
+COLORS = {"text": "#e8e6e1", "pending": "#6c6f78", "wrong": "#f2545b", "on_wrong": "#26272c"}
 
-STYLES = {
-    CharState.CORRECT: f"color:{COLOR_TEXT};",
-    CharState.CORRECTED: f"color:{COLOR_WRONG}; text-decoration:underline;",
-    CharState.WRONG: f"color:{COLOR_ON_WRONG}; background-color:{COLOR_WRONG};",
-    CharState.PENDING: f"color:{COLOR_PENDING};",
-}
+
+def set_colors(**colors: str) -> None:
+    COLORS.update(colors)
+
+
+def style_for(state: CharState) -> str:
+    c = COLORS
+    return {
+        CharState.CORRECT: f"color:{c['text']};",
+        CharState.CORRECTED: f"color:{c['wrong']}; text-decoration:underline;",
+        CharState.WRONG: f"color:{c['on_wrong']}; background-color:{c['wrong']};",
+        CharState.PENDING: f"color:{c['pending']};",
+    }[state]
+
+
+def legend_html() -> str:
+    """Legende unter dem Ergebnistext: Beispiel für Fehler und korrigiert."""
+    c = COLORS
+    return (f'<span style="color:{c["on_wrong"]}; background-color:{c["wrong"]};">&nbsp;a&nbsp;</span>'
+            f'&nbsp;Fehler&nbsp;&nbsp;&nbsp;&nbsp;'
+            f'<span style="color:{c["wrong"]}; text-decoration:underline;">a</span>&nbsp;korrigiert')
 
 
 def _glyph(ch: str, state: CharState) -> str:
@@ -44,7 +58,7 @@ def marked_html(text: str, states: list[CharState]) -> str:
         while j < n and states[j] is state:
             chunk.append(_glyph(text[j], state))
             j += 1
-        parts.append(f'<span style="{STYLES[state]}">{"".join(chunk)}</span>')
+        parts.append(f'<span style="{style_for(state)}">{"".join(chunk)}</span>')
         i = j
     return "".join(parts)
 

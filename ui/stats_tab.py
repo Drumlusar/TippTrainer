@@ -16,18 +16,13 @@ import config
 from core import char_stats as cs
 from storage.presets import PresetStore
 from storage.stats_store import StatsStore
+from ui import theme
 from ui.highscore_tab import SortItem, make_table
 from ui.widgets import fit_combo
 
 PERIODS = [("Letzte 7 Tage", 7), ("Letzte 30 Tage", 30), ("Gesamt", None)]
 KEY_MODES = ["Tastatur: Fehlerquote", "Tastatur: Tempo"]
 
-KEY_BASE = QColor("#2d2f35")
-KEY_NODATA = QColor("#232428")
-ERR_HIGH = QColor("#f2545b")
-SLOW_HIGH = QColor("#e2b714")
-INK = QColor("#e8e6e1")
-INK_DIM = QColor("#6c6f78")
 
 ROWS = [
     (0.0, "^1234567890ß"),
@@ -85,18 +80,20 @@ class KeyboardHeatmap(QWidget):
         label_font.setPixelSize(max(10, int(size * 0.36)))
         small = QFont(self.font())
         small.setPixelSize(max(8, int(size * 0.24)))
-        high = ERR_HIGH if self.mode == 0 else SLOW_HIGH
+        high = theme.color("error" if self.mode == 0 else "accent")
+        key_base, key_nodata = theme.color("surface"), theme.color("key_nodata")
         self._rects = {}
 
         def draw(key: str, rect: QRectF, label: str) -> None:
             self._rects[key] = rect
             intensity, text = self._value(self.keys.get(key))
-            color = KEY_NODATA if intensity is None else _mix(KEY_BASE, high, intensity)
+            color = key_nodata if intensity is None else _mix(key_base, high, intensity)
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(color)
             p.drawRoundedRect(rect, 4, 4)
             dark_text = intensity is not None and intensity > 0.6
-            p.setPen(QColor("#26272c") if dark_text else (INK if intensity is not None else INK_DIM))
+            p.setPen(theme.color("accent_ink") if dark_text
+                     else theme.color("ink" if intensity is not None else "dim"))
             p.setFont(label_font)
             p.drawText(rect.adjusted(5, 2, -3, -2), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop, label)
             if text:
@@ -260,9 +257,9 @@ class StatsTab(QWidget):
                 SortItem(f"{slower:+.0f} %" if slower is not None else "–", slower, True),
             ]
             if slower is not None and slower >= 25:
-                cells[5].setForeground(SLOW_HIGH)
+                cells[5].setForeground(theme.color("accent"))
             if row.error_rate >= 5:
-                cells[3].setForeground(ERR_HIGH)
+                cells[3].setForeground(theme.color("error"))
             for c, item in enumerate(cells):
                 t.setItem(r, c, item)
         t.setSortingEnabled(True)

@@ -41,12 +41,12 @@ def test_phrasen_parsen():
 
 def test_feste_durchgaenge_der_reihe_nach():
     c = make(phrases=("ab", "cd"), reps=3)
-    assert c.engine.target == "ab\ncd\nab\ncd\nab\ncd"
+    assert c.engine.target == "ab cd ab cd ab cd"
 
 
 def test_eine_zeile_wird_als_block_wiederholt():
     c = make(phrases=("Hallo Welt",), reps=3)
-    assert c.engine.target == "Hallo Welt\nHallo Welt\nHallo Welt"
+    assert c.engine.target == "Hallo Welt Hallo Welt Hallo Welt"
 
 
 def test_gemischt_jeder_durchgang_alle_phrasen_und_keine_doppelung_an_grenze():
@@ -75,19 +75,19 @@ def test_leere_phrasen_nicht_moeglich():
 
 def test_feste_durchgaenge_enden_nach_letztem_zeichen():
     c = make(phrases=("ab",), reps=2)
-    tippe(c, "ab\nab")
+    tippe(c, "ab ab")
     assert c.end_reason is SessionEnd.COMPLETED
 
 
 def test_unendlich_wird_nachgeladen_und_esc_beendet_mit_auswertung():
     c = make(phrases=("ab",), reps=None)
-    t = tippe(c, "ab\n" * 30)                     # 90 Zeichen, weit über den ersten Puffer
+    t = tippe(c, "ab " * 30)                     # 90 Zeichen, weit über den ersten Puffer
     assert c.state is SessionState.RUNNING
     assert c.can_stop
     c.stop(now=t)
     r = c.result()
     assert r.end_reason is SessionEnd.STOPPED
-    assert r.target_text == "ab\n" * 30           # nur der getippte Teil
+    assert r.target_text == "ab " * 30           # nur der getippte Teil
     assert r.progress is None
 
 
@@ -105,7 +105,7 @@ def test_feste_durchgaenge_esc_ist_abbruch():
 def test_durchgang_anzeige():
     c = make(phrases=("ab", "cd"), reps=3)
     assert c.phrase_round == (1, 3)
-    tippe(c, "ab\ncd\n")
+    tippe(c, "ab cd ")
     assert c.phrase_round == (2, 3)
 
 
@@ -113,7 +113,7 @@ def test_durchgang_anzeige():
 
 def test_fehler_setzt_auf_phrasenanfang_zurueck():
     c = make(phrases=("abc", "de"), reps=1, restart=True)
-    tippe(c, "abc\nd")          # mitten in der zweiten Phrase
+    tippe(c, "abc d")          # mitten in der zweiten Phrase
     assert c.engine.pos == 5
     c.on_char("x", now=T0 + 10)
     assert c.engine.pos == 4    # zurück an den Anfang von „de“
@@ -122,9 +122,9 @@ def test_fehler_setzt_auf_phrasenanfang_zurueck():
     assert c.state is SessionState.RUNNING
 
 
-def test_falsches_enter_gehoert_zur_vorigen_phrase():
+def test_falsches_trennzeichen_gehoert_zur_vorigen_phrase():
     c = make(phrases=("ab", "cd"), reps=1, restart=True)
-    tippe(c, "ab ")             # Leerzeichen statt Enter
+    tippe(c, "abx")             # x statt Leertaste
     assert c.engine.pos == 0    # „ab“ muss neu getippt werden
 
 
@@ -147,20 +147,20 @@ def test_death_by_mistake_hat_vorrang():
 def test_statistik_je_phrase():
     c = make(phrases=("ab", "xyz"), reps=2)
     # 1 Zeichen pro Sekunde; in „xyz“ ein Tippfehler (wird nicht korrigiert)
-    tippe(c, "ab\n" + "xqz\n" + "ab\n" + "xyz")
+    tippe(c, "ab " + "xqz " + "ab " + "xyz")
     stats = {s.phrase: s for s in c.result().phrase_stats}
     assert stats["ab"].reps == 2 and stats["xyz"].reps == 2
     assert stats["xyz"].mistakes == 1 and stats["ab"].mistakes == 0
-    # „ab\\n“: 3 Anschläge; Zeit vom Enter davor bis zum eigenen Enter = 3 s
+    # „ab\ “: 3 Anschläge; Zeit von der Leertaste davor bis zur eigenen = 3 s
     # (erster Durchgang ab Startzeit: nur 2 s, weil der erste Anschlag den Start setzt)
     assert stats["ab"].keystrokes == 6
     assert stats["ab"].duration_s == pytest.approx(2 + 3)
-    assert stats["xyz"].cpm == pytest.approx(7 / 7 * 60)   # „xqz\\n“ + „xyz“ = 7 in 7 s
+    assert stats["xyz"].cpm == pytest.approx(7 / 7 * 60)   # „xqz\ “ + „xyz“ = 7 in 7 s
 
 
 def test_statistik_unvollstaendige_phrase_zaehlt_nur_fehler():
     c = make(phrases=("ab", "cd"), reps=1)
-    tippe(c, "ab\nx")
+    tippe(c, "ab x")
     c.abort(now=T0 + 10)
     stats = {s.phrase: s for s in c.result().phrase_stats}
     assert stats["cd"].reps == 0 and stats["cd"].mistakes == 1
@@ -172,3 +172,13 @@ def test_netto_apm():
     r = c.result()
     assert r.cpm_avg == pytest.approx(4 / 3 * 60)
     assert r.net_cpm == pytest.approx(3 / 3 * 60)
+
+
+def test_phrasen_mit_leertaste_aber_je_eigene_zeile():
+    from ui.text_layout import wrap_lines
+    c = make(phrases=("ab", "cd e"), reps=2)
+    assert c.engine.target == "ab cd e ab cd e"
+    breaks = c.line_breaks()
+    assert breaks == [3, 8, 11, 15]
+    lines = wrap_lines(c.engine.target, 60, breaks)
+    assert [c.engine.target[a:b] for a, b in lines] == ["ab ", "cd e ", "ab ", "cd e"]

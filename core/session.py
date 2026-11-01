@@ -351,7 +351,7 @@ class SessionController:
         else:
             offset = len(self.engine.target) + len(sep)
             self.engine.append_text(sep + chunk.text)
-            if self._segments:                       # Enter gehört zur vorigen Phrase
+            if self._segments:                       # Trennzeichen gehört zur vorigen Phrase
                 last = self._segments[-1]
                 self._segments[-1] = replace(last, end=last.end + len(sep))
         self._chunk_starts.append((offset, chunk.name))
@@ -359,11 +359,16 @@ class SessionController:
             cursor = offset
             for n, idx in enumerate(chunk.parts):
                 length = len(self._source.phrases[idx])
-                newline = 1 if n < len(chunk.parts) - 1 else 0
-                self._segments.append(Segment(cursor, cursor + length + newline, idx,
+                gap = len(sep) if n < len(chunk.parts) - 1 else 0
+                self._segments.append(Segment(cursor, cursor + length + gap, idx,
                                               self._chunk_count))
-                cursor += length + newline
+                cursor += length + gap
         self._chunk_count += 1
+
+    def line_breaks(self) -> list[int]:
+        """Positionen, an denen die Anzeige eine neue Zeile beginnt: im Phrasen-Modus
+        nach jeder Phrase (samt ihrem Trenn-Leerzeichen), sonst keine."""
+        return [s.end for s in self._segments]
 
     def _segment_at(self, pos: int) -> Segment | None:
         if not self._segments:

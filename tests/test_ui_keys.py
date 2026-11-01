@@ -36,3 +36,18 @@ def ev(key, text="", mods=M.NoModifier, repeat=False):
 ])
 def test_tastenzuordnung(event, erwartet):
     assert key_to_input(event) == erwartet
+
+
+@pytest.mark.parametrize("text, mods, erwartet", [
+    ("A", M.NoModifier, True),          # groß ohne Shift -> Feststelltaste an
+    ("a", M.NoModifier, False),
+    ("A", M.ShiftModifier, False),
+    ("a", M.ShiftModifier, True),       # klein mit Shift -> Feststelltaste an
+    ("Ä", M.NoModifier, True),
+    ("ß", M.NoModifier, None),          # kein Großbuchstabe -> unbekannt
+    ("1", M.NoModifier, None),
+    (" ", M.NoModifier, None),
+])
+def test_feststelltaste_erkennen(text, mods, erwartet):
+    from ui.typing_view import caps_from_event
+    assert caps_from_event(text, mods) is erwartet

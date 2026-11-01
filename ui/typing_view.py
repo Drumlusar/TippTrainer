@@ -45,6 +45,17 @@ def key_to_input(event: QKeyEvent) -> str | None:
     return None
 
 
+def caps_from_event(text: str, modifiers) -> bool | None:
+    """Feststelltaste aus einem getippten Buchstaben erschließen.
+    Groß ohne Shift oder klein mit Shift -> an; passend zu Shift -> aus;
+    kein eindeutiger Buchstabe (Ziffer, Satzzeichen, ß) -> None (unbekannt).
+    Beispiele: "A" ohne Shift -> True, "a" ohne Shift -> False, "a" mit Shift -> True."""
+    if len(text) != 1 or not text.isalpha() or len(text.upper()) != 1 or text.lower() == text.upper():
+        return None
+    shift = bool(modifiers & Qt.KeyboardModifier.ShiftModifier)
+    return text.isupper() != shift
+
+
 class TypingView(QWidget):
     finished = Signal()      # Runde zu Ende (fertig, Zeit abgelaufen, gestorben)
     aborted = Signal()       # Esc
@@ -68,6 +79,20 @@ class TypingView(QWidget):
         bar.addWidget(self.err_label, 1)
         bar.addWidget(self.time_label, 1)
 
+        # Feststelltaste: Qt kann ihren Zustand nicht direkt abfragen. Er wird aus den
+        # getippten Buchstaben erschlossen: Großbuchstabe ohne Shift (oder klein mit Shift)
+        # -> Feststelltaste an. Bis zum ersten Buchstaben ist er unbekannt (None).
+        self.caps_on: bool | None = None
+        self.caps_label = QLabel("FESTSTELLTASTE AKTIV")
+        self.caps_label.setObjectName("CapsWarning")
+        self.caps_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.caps_label.setToolTip("Großbuchstaben ohne Shift erkannt – bitte die Feststelltaste "
+                                   "(Caps Lock) ausschalten.")
+        sp = self.caps_label.sizePolicy()
+        sp.setRetainSizeWhenHidden(True)          # Text springt beim Ein-/Ausblenden nicht
+        self.caps_label.setSizePolicy(sp)
+        self.caps_label.hide()
+
         self.display = TextDisplay(controller)
         self.hint = hint = QLabel("Esc = zurück zum Menü")
         hint.setObjectName("Hint")
@@ -76,6 +101,7 @@ class TypingView(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(40, 30, 40, 24)
         layout.addLayout(bar)
+        layout.addWidget(self.caps_label, 0, Qt.AlignmentFlag.AlignHCenter)
         layout.addWidget(self.display, 1)
         layout.addWidget(hint)
 
@@ -84,6 +110,10 @@ class TypingView(QWidget):
         self.timer.timeout.connect(self._on_tick)
         self._ticks = 0
         self._done = False
+        # Tempo-Cursor flüssig bewegen: eigener, schnellerer Takt nur fürs Neuzeichnen
+        self.pace_timer = QTimer(self)
+        self.pace_timer.setInterval(30)
+        self.pace_timer.timeout.connect(self.display.update)
 
     # --- Steuerung --------------------------------------------------------------
 
@@ -100,6 +130,8 @@ class TypingView(QWidget):
         self._update_bar()
         self.display.update()
         self.timer.start()
+        if self.display.pace_cpm and not s.exam_mode:
+            self.pace_timer.start()
         self.setFocus()
 
     def _on_tick(self) -> None:
@@ -114,6 +146,7 @@ class TypingView(QWidget):
     def _check_end(self) -> bool:
         if self.controller.state is SessionState.ENDED:
             self.timer.stop()
+            self.pace_timer.stop()
             self.display.update()
             if not self._done:              # nur einmal melden (sonst doppelt gespeichert)
                 self._done = True
@@ -130,9 +163,11 @@ class TypingView(QWidget):
                 self._check_end()
                 return
             self.timer.stop()
+            self.pace_timer.stop()
             self.controller.abort()
             self.aborted.emit()
             return
+        self._update_caps(event)
         if self.controller.state is SessionState.ENDED:
             return
         value = key_to_input(event)
@@ -149,6 +184,16 @@ class TypingView(QWidget):
         self.display.update()
         self.err_label.setText(self._errors_text())
         self._check_end()
+
+    def _update_caps(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_CapsLock:
+            if self.caps_on is not None:          # Umschalten nur, wenn der Zustand bekannt ist
+                self.caps_on = not self.caps_on
+        else:
+            caps = caps_from_event(event.text(), event.modifiers())
+            if caps is not None:
+                self.caps_on = caps
+        self.caps_label.setVisible(bool(self.caps_on))
 
     # --- Live-Leiste ----------------------------------------------------------------
 

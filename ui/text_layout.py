@@ -13,7 +13,9 @@ from bisect import bisect_right
 Line = tuple[int, int]
 
 
-def wrap_lines(text: str, cols: int) -> list[Line]:
+def wrap_lines(text: str, cols: int, breaks: list[int] = ()) -> list[Line]:
+    """breaks: aufsteigende Positionen, an denen zusätzlich eine neue Zeile beginnt
+    (Phrasen-Modus: Phrasen sind durch Leerzeichen getrennt, stehen aber je in eigener Zeile)."""
     if cols < 1:
         raise ValueError("cols muss >= 1 sein")
     lines: list[Line] = []
@@ -21,6 +23,9 @@ def wrap_lines(text: str, cols: int) -> list[Line]:
     while start < n:
         nl = text.find("\n", start)
         hard_end = n if nl == -1 else nl + 1
+        k = bisect_right(breaks, start)
+        if k < len(breaks) and breaks[k] < hard_end:
+            hard_end = breaks[k]
         if hard_end - start <= cols:
             end = hard_end
         else:

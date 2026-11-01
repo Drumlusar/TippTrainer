@@ -1,0 +1,35 @@
+# The most common letter pairs (bigrams) in English, roughly by frequency.
+# Each line: the pair three times, then three words that contain it.
+# Lines starting with # are comments and are not typed.
+th th th the that with
+he he he when where here
+in in in thing find inside
+er er er her water every
+an an an and many plan
+re re re are more great
+on on on only long money
+at at at that what late
+en en en then open even
+nd nd nd hand under end
+ti ti ti time nation still
+es es es yes these best
+or or or for word story
+te te te tea letter note
+of of of often offer office
+ed ed ed used red education
+is is is this list wish
+it it it with city little
+al al al all also small
+ar ar ar part early hard
+st st st first just stop
+to to to today total photo
+nt nt nt want into until
+ng ng ng thing young bring
+se se se see these house
+ha ha ha have that half
+as as as was last easy
+ou ou ou you out about
+io io io action million radio
+le le le let people table
+ve ve ve very over give
+ea ea ea each year real

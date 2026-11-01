@@ -213,9 +213,11 @@ def parse_phrases(raw: str, allow_altgr: bool) -> list[str]:
 
 class PhraseSource(TextSource):
     """Phrasen aus dem Textfeld; ein Chunk = ein Durchgang (alle Phrasen einmal),
-    getrennt durch Enter. Bei „gemischt“ wird jeder Durchgang neu gemischt, ohne
-    dass dieselbe Phrase direkt an der Durchgangsgrenze doppelt kommt."""
-    separator = "\n"
+    getrennt durch ein Leerzeichen (eine Leertaste zwischen zwei Phrasen). Die Anzeige
+    beginnt trotzdem jede Phrase in einer neuen Zeile (SessionController.line_breaks).
+    Bei „gemischt“ wird jeder Durchgang neu gemischt, ohne dass dieselbe Phrase direkt
+    an der Durchgangsgrenze doppelt kommt."""
+    separator = " "
 
     def __init__(self, phrases: list[str], name: str, rng: random.Random, shuffle: bool) -> None:
         if not phrases:
@@ -233,7 +235,8 @@ class PhraseSource(TextSource):
             if len(order) > 1 and order[0] == self._last:
                 order[0], order[1] = order[1], order[0]
         self._last = order[-1]
-        return TextChunk("\n".join(self.phrases[i] for i in order), self.name, tuple(order))
+        return TextChunk(self.separator.join(self.phrases[i] for i in order), self.name,
+                         tuple(order))
 
 
 # --- Fabrik --------------------------------------------------------------------

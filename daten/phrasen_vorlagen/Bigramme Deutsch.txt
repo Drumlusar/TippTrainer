@@ -1,0 +1,35 @@
+# Die häufigsten Buchstabenpaare (Bigramme) im Deutschen, grob nach Häufigkeit.
+# Je Zeile: das Paar dreimal, dann drei Wörter, in denen es vorkommt.
+# Zeilen mit # sind Kommentare und werden nicht getippt.
+er er er der wer Erde
+en en en denen Enkel lesen
+ch ch ch ich doch Nacht
+de de de oder Leder Ende
+ei ei ei mein Eis Arbeit
+te te te Tee Wetter Seite
+in in in Kind innen Wein
+nd nd nd und Hand Abend
+ie ie ie die Liebe vier
+ge ge ge gegen Auge gehen
+st st st ist Stadt Liste
+ne ne ne eine Sonne neben
+be be be aber Leben Besen
+es es es Esel dieses bestes
+un un un unten Stunde Mund
+re re re Regen ihre Treppe
+an an an Anfang Land Kranz
+he he he Hemd sehen Lehrer
+au au au Haus auch blau
+ng ng ng lang Zeitung Ring
+se se se Sessel Rose Reise
+it it it mit Zeit bitte
+di di di Dienstag Radio Lied
+ic ic ic nicht sicher Licht
+sc sc sc schön Schule Tasche
+le le le alle Teller Leiter
+da da da dann Dame Soda
+ns ns ns uns Gans Mensch
+is is is Tisch Fisch bis
+ra ra ra Rad Frau gerade
+eu eu eu neu heute Freund
+äu äu äu Häuser Bäume läuft

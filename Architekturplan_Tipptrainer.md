@@ -494,7 +494,7 @@ Jede Phase ist für sich testbar und in kleinen Schritten machbar.
 | Bei Fehler | weitertippen · Phrase neu beginnen · Death by Mistake |
 | Eingabe | Computer / Schreibmaschine, AltGr |
 
-- Ein Durchgang = alle Phrasen einmal, getrennt durch Enter. Das Enter nach einer Phrase gehört zu ihr.
+- Ein Durchgang = alle Phrasen einmal, getrennt durch ein Leerzeichen (eine Leertaste). Das Leerzeichen nach einer Phrase gehört zu ihr. In der Tippansicht beginnt trotzdem jede Phrase in einer neuen Zeile, es sind also höchstens 3 Phrasen gleichzeitig zu sehen (lange Phrasen können zwei Zeilen belegen).
 - **Unendlich:** Text wird nachgeladen; **Esc beendet mit Auswertung** (Ergebnis „beendet“). Bei fester Anzahl ist Esc wie überall ein Abbruch.
 - **Phrase neu beginnen:** Nach einem Fehler springt der Cursor an den Anfang der aktuellen Phrase; der Fehler zählt als gemacht (Live-Anzeige zeigt hier alle Fehler).
 - **Auswertung je Phrase:** Tabelle mit Durchgängen, Ø A/min (nur vollständige Durchgänge; Zeit vom Enter davor bis zum eigenen Enter) und Fehler gesamt (inkl. korrigierter).
@@ -553,7 +553,26 @@ Jede Phase ist für sich testbar und in kleinen Schritten machbar.
 
 ---
 
-## 15. Mögliche spätere Erweiterungen
+## 15. Erweiterung: Einstellungen und Tempo-Cursor
+
+**Fenster „Einstellungen …“** (Menü oben rechts, `ui/settings_dialog.py`), gespeichert in `daten/einstellungen.json`:
+- Design „Dunkel“ oder „Hell“. Alle Farben stehen benannt in `ui/theme.py` (zwei Paletten); `style.qss` enthält Platzhalter (@bg, @accent …), Diagramme, Tabellen und Tastaturansicht fragen die Farben erst beim Zeichnen ab. Der Wechsel wirkt sofort, ohne Neustart. Die Pfeile der Auswahllisten werden je Design als SVG in `ui/pfeile/` erzeugt.
+- Schriftgröße des Tipptexts (12–60 pt, Standard 26) und der Oberfläche (80–160 %; skaliert alle Schriftgrößen im Stylesheet und den Ergebnistext).
+- Tempo-Cursor an/aus und Zieltempo (Eingabe in der aktuellen Einheit, gespeichert in A/min).
+
+**Tempo-Cursor:** Position = verstrichene Zeit × Zieltempo / 60 Zeichen, ab dem ersten Anschlag; mit Nachkommastellen, daher gleitend (Neuzeichnen alle 30 ms). Schmal und grau, unter dem eigenen Cursor gezeichnet; nur sichtbar, wenn er in den drei angezeigten Zeilen liegt. Im Prüfungsmodus ausgeblendet, weil er das Tempo verraten würde.
+
+---
+
+## 16. Erweiterung: Phrasen-Vorlagen und Feststelltasten-Hinweis
+
+**Phrasen-Vorlagen:** Jede `.txt`-Datei in `daten/phrasen_vorlagen/` ist ein mitgeliefertes Preset (Name = Dateiname, `#`-Zeilen = Kommentare). Mitgeliefert: „Bigramme Deutsch/Englisch“ (je 32 häufige Buchstabenpaare; Zeile = Paar dreimal + drei Beispielwörter) und „Schwierige Wörter Deutsch/Englisch“. Vorlagen stehen in der Auswahl unter den eigenen Presets (durch eine Linie getrennt) und sind schreibgeschützt; ein eigenes Preset gleichen Namens verdeckt die Vorlage, nach dessen Löschen ist sie wieder da. Sie liegen im Repository, die eigenen Presets (`phrasen_presets.json`) nicht.
+
+**Feststelltasten-Hinweis:** Qt kann den Zustand der Feststelltaste nicht abfragen. Er wird aus jedem getippten Buchstaben erschlossen: Großbuchstabe ohne Shift oder Kleinbuchstabe mit Shift = an, sonst aus; Ziffern, Satzzeichen und ß ändern nichts. Ein Druck auf die Feststelltaste schaltet den erschlossenen Zustand um. Ist sie an, erscheint über dem Text „FESTSTELLTASTE AKTIV“ (der Platz ist reserviert, der Text springt nicht).
+
+---
+
+## 17. Mögliche spätere Erweiterungen
 
 Diese Punkte gehören nicht zur ersten Version.
 

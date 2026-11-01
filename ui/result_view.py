@@ -12,7 +12,7 @@ from core.scoring import score
 from ui import theme, units
 from ui.cpm_chart import CpmChart
 from ui.end_view import LockedEndView
-from ui.result_html import COLOR_ON_WRONG, COLOR_WRONG, marked_html
+from ui.result_html import legend_html, marked_html
 
 TITLES = {
     SessionEnd.COMPLETED: "Geschafft!",
@@ -97,6 +97,7 @@ class Tile(QFrame):
 class ResultView(LockedEndView):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
+        self.text_pt = 14                    # Schriftgröße des Ergebnistexts (Einstellungen)
         self.title = QLabel()
         self.title.setObjectName("ResultTitle")
         self.summary = QLabel()
@@ -125,10 +126,7 @@ class ResultView(LockedEndView):
         self.text.setObjectName("ResultText")
         self.text.setFont(theme.mono_font(14))
         self.text.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        legend = QLabel(
-            f'<span style="color:{COLOR_ON_WRONG}; background-color:{COLOR_WRONG};">&nbsp;a&nbsp;</span>'
-            f'&nbsp;Fehler&nbsp;&nbsp;&nbsp;&nbsp;'
-            f'<span style="color:{COLOR_WRONG}; text-decoration:underline;">a</span>&nbsp;korrigiert')
+        self.legend = legend = QLabel(legend_html())
         legend.setObjectName("Hint")
         self.phrase_table = QTableWidget(0, 4)
         self.phrase_table.setObjectName("PhraseTable")
@@ -208,11 +206,14 @@ class ResultView(LockedEndView):
                         "" if r.consistency is not None else "Runde zu kurz")
         self.fatigue.setText(fatigue_text(r.thirds))
         self.fatigue.setVisible(bool(self.fatigue.text()))
-        self.t_time.set(fmt_duration(r.duration_s))
+        d = r.duration_s                     # Einheit klein darunter, damit nichts abgeschnitten wird
+        self.t_time.set(f"{d:.1f}" if d < 60 else f"{int(d) // 60}:{int(d) % 60:02d}",
+                        "Sekunden" if d < 60 else "Minuten")
         self.t_keys.set(str(r.keystrokes))
-        family = theme.mono_font(14).family()
+        self.legend.setText(legend_html())          # Farben des aktuellen Designs
+        family = theme.mono_font(self.text_pt).family()
         self.text.setHtml(
-            f'<div style="font-family:\'{family}\'; font-size:14pt; line-height:150%;">'
+            f'<div style="font-family:\'{family}\'; font-size:{self.text_pt}pt; line-height:150%;">'
             f'{marked_html(r.target_text, r.char_states)}</div>')
         self.chart.plot([units.conv(v) for v in r.cpm_series], units.conv(r.cpm_avg),
                         r.error_times_s, units.unit())

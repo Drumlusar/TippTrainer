@@ -15,13 +15,12 @@ from PySide6.QtWidgets import (QFrame, QGridLayout, QLabel, QScrollArea,
 from core.models import SessionEnd, SourceMode
 from core.scoring import score
 from ui import units
-from ui.result_html import COLOR_WRONG
+from ui import theme
 from storage.run_store import StoredRun
 
 SOURCE_SHORT = {SourceMode.RANDOM_WORDS: "Wörter", SourceMode.RANDOM_TEXT: "Zufallstext"}
 RESULT_SHORT = {SessionEnd.COMPLETED: "fertig", SessionEnd.TIME_UP: "Zeit um",
                 SessionEnd.DIED: "gestorben", SessionEnd.STOPPED: "beendet"}
-COLOR_SURVIVED = "#7cc47f"
 
 # Filter im Reiter Verlauf
 FILTER_ALL, FILTER_NORMAL, FILTER_DEATH = "Alle Runden", "Normale Runden", "Nur Death by Mistake"
@@ -34,8 +33,8 @@ def result_label(run: StoredRun) -> tuple[str, str | None]:
     r = run.result
     if r.settings.death_by_mistake:
         if r.end_reason is SessionEnd.DIED:
-            return "gestorben", COLOR_WRONG
-        return "überlebt", COLOR_SURVIVED
+            return "gestorben", theme.hexc("error")
+        return "überlebt", theme.hexc("ok")
     return RESULT_SHORT.get(r.end_reason, r.end_reason.value), None
 
 

@@ -14,18 +14,24 @@ import numpy as np                                                  # noqa: E402
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg      # noqa: E402
 from matplotlib.figure import Figure                                # noqa: E402
 
-BG = "#26272c"
-LINE = "#e2b714"
-AVG = "#8a8d96"
-ERR = "#f2545b"
-INK = "#b8b6b0"
-MUTED = "#6c6f78"
-GRID = "#34363c"
+from ui import theme                                                # noqa: E402
+
+
+def style_axes(ax) -> None:
+    """Gemeinsamer Achsen-Stil, Farben aus dem aktuellen Design."""
+    ax.set_facecolor(theme.hexc("bg"))
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    for side in ("left", "bottom"):
+        ax.spines[side].set_color(theme.hexc("grid"))
+    ax.tick_params(colors=theme.hexc("dim"), labelsize=9, length=0, pad=6)
+    ax.grid(axis="y", color=theme.hexc("grid"), linewidth=0.8)
+    ax.set_axisbelow(True)
 
 
 class CpmChart(FigureCanvasQTAgg):
     def __init__(self, parent=None) -> None:
-        self.fig = Figure(figsize=(5, 3), facecolor=BG, layout="constrained")
+        self.fig = Figure(figsize=(5, 3), facecolor=theme.hexc("bg"), layout="constrained")
         super().__init__(self.fig)
         self.setParent(parent)
         self.ax = self.fig.add_subplot(111)
@@ -34,14 +40,9 @@ class CpmChart(FigureCanvasQTAgg):
              unit: str = "A/min") -> None:
         ax = self.ax
         ax.clear()
-        ax.set_facecolor(BG)
-        for side in ("top", "right"):
-            ax.spines[side].set_visible(False)
-        for side in ("left", "bottom"):
-            ax.spines[side].set_color(GRID)
-        ax.tick_params(colors=MUTED, labelsize=9, length=0, pad=6)
-        ax.grid(axis="y", color=GRID, linewidth=0.8)
-        ax.set_axisbelow(True)
+        self.fig.set_facecolor(theme.hexc("bg"))
+        style_axes(ax)
+        MUTED, LINE, AVG, ERR = (theme.hexc(k) for k in ("dim", "accent", "muted", "error"))
 
         if not series:
             ax.set_xticks([])
@@ -67,6 +68,6 @@ class CpmChart(FigureCanvasQTAgg):
         ax.set_ylim(0, max(y.max(), avg) * 1.15 + 1)
         ax.set_xlabel("Sekunden", color=MUTED, fontsize=9)
         ax.set_ylabel(unit, color=MUTED, fontsize=9)
-        leg = ax.legend(loc="lower right", fontsize=8, frameon=False, labelcolor=INK)
+        leg = ax.legend(loc="lower right", fontsize=8, frameon=False, labelcolor=theme.hexc("chart_ink"))
         leg.set_zorder(4)
         self.draw_idle()

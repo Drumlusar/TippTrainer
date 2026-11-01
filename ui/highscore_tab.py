@@ -7,14 +7,13 @@ Spaltenüberschrift sortierbar; Klick auf einen Eintrag unten öffnet dessen Aus
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (QAbstractItemView, QComboBox, QHBoxLayout,
                                QHeaderView, QLabel, QSpinBox, QTableWidget,
                                QTableWidgetItem, QVBoxLayout, QWidget)
 
 import config
 from storage import highscores as hs
-from ui import units
+from ui import theme, units
 from ui.widgets import fit_combo, plain_spin
 
 INPUT_FILTERS = [("Eingabe: alle", None), ("Computer", "Computer"),
@@ -26,8 +25,6 @@ HINT_TEXTS = ("Es zählen nur vollständig getippte Einzeltexte ohne Zeitlimit "
               "(Death by Mistake nur überlebt). Klick auf eine Spalte sortiert.")
 HINT_PROFILES = ("Es zählen Runden, die mit genau den Einstellungen eines Profils gestartet "
                  "wurden (fertig oder Zeit abgelaufen). Klick auf eine Spalte sortiert.")
-GOLD = QColor("#e2b714")
-NEW_BG = QColor(226, 183, 20, 45)
 
 
 def fmt_date(when: str | None) -> str:
@@ -209,7 +206,7 @@ class HighscoreTab(QWidget):
                 SortItem(fmt_date(row.last), row.last),
             ]
             if best:
-                cells[1].setForeground(GOLD)
+                cells[1].setForeground(theme.color("accent"))
             for c, item in enumerate(cells):
                 t.setItem(r, c, item)
         t.setSortingEnabled(True)
@@ -253,10 +250,10 @@ class HighscoreTab(QWidget):
             cells[0].setData(Qt.ItemDataRole.UserRole, a.when)
             if r == 0:                                   # Rekord: goldene Schrift
                 for item in cells:
-                    item.setForeground(GOLD)
+                    item.setForeground(theme.color("accent"))
             if a.when == self.highlight_when:            # frisch getippt: hinterlegt
                 for item in cells:
-                    item.setBackground(NEW_BG)
+                    item.setBackground(theme.color("accent", 45))
             for c, item in enumerate(cells):
                 t.setItem(r, c, item)
         t.setSortingEnabled(True)
