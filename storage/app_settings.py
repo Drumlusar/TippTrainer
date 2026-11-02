@@ -109,3 +109,23 @@ class AppSettings:
     @pace_cpm.setter
     def pace_cpm(self, value: float) -> None:
         self.set("tempo_cursor_apm", float(value))
+
+    @property
+    def keyboard_mode(self) -> str:
+        """Bildschirmtastatur: "aus", "naechste", "live" oder "beides"."""
+        m = self.get("bildschirmtastatur", "aus")
+        return m if m in ("aus", "naechste", "live", "beides") else "aus"
+
+    @keyboard_mode.setter
+    def keyboard_mode(self, value: str) -> None:
+        self.set("bildschirmtastatur", value)
+
+    @property
+    def keyboard_layout(self) -> str:
+        """Tastaturlayout der Anzeige: "qwertz", "qwerty" oder "dvorak"."""
+        v = self.get("tastaturlayout", "qwertz")
+        return v if v in ("qwertz", "qwerty", "dvorak") else "qwertz"
+
+    @keyboard_layout.setter
+    def keyboard_layout(self, value: str) -> None:
+        self.set("tastaturlayout", value)

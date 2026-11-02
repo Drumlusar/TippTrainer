@@ -18,7 +18,7 @@ COLUMNS = [
     "datum_zeit", "textquelle", "textnamen", "zeitlimit_s", "eingabemodus",
     "death_by_mistake", "altgr", "ergebnis", "dauer_s", "anschlaege",
     "fehler", "fehler_korrigiert", "fehlerquote_prozent",
-    "apm_durchschnitt", "apm_spitze", "apm_netto", "punkte", "profil", "konsistenz_prozent",
+    "apm_durchschnitt", "apm_spitze", "apm_netto", "punkte", "profil", "konsistenz_prozent", "tastatur",
 ]
 DATE_FMT = "%Y-%m-%d %H:%M:%S"
 
@@ -59,6 +59,7 @@ def to_row(result: SessionResult, when: datetime,
         "punkte": _num(score(result.keystrokes, result.mistakes, result.duration_s, penalty)),
         "profil": s.profile,
         "konsistenz_prozent": "" if result.consistency is None else _num(result.consistency),
+        "tastatur": s.keyboard,
     }
 
 

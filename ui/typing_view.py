@@ -6,8 +6,10 @@ from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 import config
+from core.models import KeyOutcome
 from core.session import SessionController, SessionState
 from ui import units
+from ui.keyboard_view import KeyboardView
 from ui.text_display import TextDisplay
 
 
@@ -103,6 +105,9 @@ class TypingView(QWidget):
         layout.addLayout(bar)
         layout.addWidget(self.caps_label, 0, Qt.AlignmentFlag.AlignHCenter)
         layout.addWidget(self.display, 1)
+        self.keyboard = KeyboardView()                 # Bildschirmtastatur (Einstellungen)
+        self.keyboard.hide()
+        layout.addWidget(self.keyboard)
         layout.addWidget(hint)
 
         self.timer = QTimer(self)
@@ -129,6 +134,8 @@ class TypingView(QWidget):
         self._done = False
         self._update_bar()
         self.display.update()
+        self.keyboard.clear()
+        self._update_keyboard()
         self.timer.start()
         if self.display.pace_cpm and not s.exam_mode:
             self.pace_timer.start()
@@ -176,14 +183,27 @@ class TypingView(QWidget):
             return
         if value == "BACKSPACE":
             self.controller.on_backspace()
+            self.keyboard.flash("BACKSPACE", True)
         else:
             was_waiting = self.controller.state is SessionState.WAITING
-            self.controller.on_char(value)
+            outcome = self.controller.on_char(value)
+            # Prüfungsmodus: auch auf der Tastatur keine Fehler verraten
+            self.keyboard.flash(value, outcome is not KeyOutcome.WRONG
+                                or self.controller.settings.exam_mode)
             if was_waiting:
                 self._update_bar()
+        self._update_keyboard()
         self.display.update()
         self.err_label.setText(self._errors_text())
         self._check_end()
+
+    def _update_keyboard(self) -> None:
+        """Nächstes erwartetes Zeichen auf der Bildschirmtastatur hervorheben."""
+        c = self.controller
+        e = c.engine
+        nxt = (e.target[e.pos] if e is not None and c.state is not SessionState.ENDED
+               and e.pos < len(e.target) else None)
+        self.keyboard.show_next(nxt)
 
     def _update_caps(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_CapsLock:

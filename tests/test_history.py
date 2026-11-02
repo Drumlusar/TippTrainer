@@ -35,6 +35,7 @@ def test_zeile_wie_im_plan():
         "punkte": "188,0",                     # (248 - 10 × 6 Fehler gesamt) / 1 min
         "profil": "",
         "konsistenz_prozent": "",
+        "tastatur": "",
     }
 
 
@@ -83,7 +84,7 @@ def test_nicht_schreibbar(tmp_path):
 
 def test_alte_datei_wird_auf_neue_spalten_umgestellt(tmp_path):
     p = tmp_path / "s.csv"
-    alt = history.COLUMNS[:-4]                       # älteres Format ohne die letzten Spalten
+    alt = history.COLUMNS[:-5]                       # älteres Format ohne die letzten Spalten
     p.write_bytes(("﻿" + ";".join(alt) + "\n" + ";".join(["x"] * len(alt)) + "\n").encode("utf-8"))
     assert history.append(result(), p, WHEN)
     rows = history.load_recent(p, n=10)

@@ -150,3 +150,10 @@ def test_runde_merkt_sich_ihren_statistikbeitrag(tmp_path):
     assert store.load(without).stats is None and store.load(without).in_stats is False
     store.set_in_stats(with_stats, False)
     assert store.load(with_stats).in_stats is False
+
+
+def test_tasten_je_layout():
+    from core.keyboard_layout import LAYOUTS
+    keys = cs.key_rows(stats(), LAYOUTS["qwerty"])
+    assert keys["e"].keys == 120
+    assert "ß" not in keys                    # gibt es auf QWERTY nicht -> nicht angezeigt

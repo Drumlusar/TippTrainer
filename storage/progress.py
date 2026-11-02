@@ -37,11 +37,12 @@ class DayPoint:
     error_rate_7d: float
 
 
-def load_runs(profile: str, path: Path = config.HISTORY_FILE) -> list[Run]:
+def load_runs(profile: str, path: Path = config.HISTORY_FILE,
+              keyboard: str | None = None) -> list[Run]:
     out = []
     for row in load_all(path):
         a = profile_attempt(row)
-        if a is None or a.text != profile:
+        if a is None or a.text != profile or (keyboard is not None and a.keyboard != keyboard):
             continue
         try:
             day = datetime.strptime(a.when, DATE_FMT).date()
@@ -79,5 +80,7 @@ def daily(runs: list[Run], window_days: int = 7) -> list[DayPoint]:
     return points
 
 
-def profile_progress(profile: str, path: Path = config.HISTORY_FILE) -> list[DayPoint]:
-    return daily(load_runs(profile, path))
+def profile_progress(profile: str, path: Path = config.HISTORY_FILE,
+                     keyboard: str | None = None) -> list[DayPoint]:
+    """keyboard: Tastatur-ID oder None (alle Tastaturen)."""
+    return daily(load_runs(profile, path, keyboard))

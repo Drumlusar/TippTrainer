@@ -23,7 +23,7 @@ from storage.progress import DayPoint, profile_progress             # noqa: E402
 from ui import units                                                # noqa: E402
 from ui import theme                                                # noqa: E402
 from ui.cpm_chart import style_axes                                 # noqa: E402
-from ui.widgets import fit_combo                                    # noqa: E402
+from ui.widgets import ALL_KEYBOARDS, fill_keyboard_combo, fit_combo                                    # noqa: E402
 
 
 
@@ -83,6 +83,9 @@ class ProgressTab(QWidget):
         self.history_file = history_file
         self.profile_combo = QComboBox()
         self.profile_combo.currentIndexChanged.connect(self.refresh)
+        self.kb_combo = QComboBox()
+        self.kb_combo.addItem(ALL_KEYBOARDS, None)
+        self.kb_combo.currentIndexChanged.connect(self.refresh)
         label = QLabel("Profil:")
         label.setObjectName("Hint")
         self.summary = QLabel()
@@ -90,6 +93,7 @@ class ProgressTab(QWidget):
         top = QHBoxLayout()
         top.addWidget(label)
         top.addWidget(self.profile_combo)
+        top.addWidget(self.kb_combo)
         top.addSpacing(16)
         top.addWidget(self.summary, 1)
         self.chart = ProgressChart()
@@ -102,6 +106,10 @@ class ProgressTab(QWidget):
         layout.addLayout(top)
         layout.addWidget(self.chart, 1)
         layout.addWidget(hint)
+
+    def set_keyboards(self, keyboards) -> None:
+        fill_keyboard_combo(self.kb_combo, keyboards)
+        self.refresh()
 
     def set_profiles(self, names: list[str], select: str | None = None) -> None:
         current = select or self.profile_combo.currentText()
@@ -116,7 +124,8 @@ class ProgressTab(QWidget):
 
     def refresh(self) -> None:
         name = self.profile_combo.currentText()
-        points = profile_progress(name, self.history_file) if name else []
+        points = (profile_progress(name, self.history_file, self.kb_combo.currentData())
+                  if name else [])
         self.chart.plot(points)
         if not points:
             self.summary.setText("")

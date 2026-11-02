@@ -65,6 +65,7 @@ class SessionSettings:
     space_skips_word: bool = False    # Leertaste mitten im Wort springt zum nächsten (wie online)
     exam_mode: bool = False           # Prüfungsmodus: keine Live-Fehler, kein Live-Tempo
     profile: str = ""                 # Name des Test-Profils, falls mit einem gestartet
+    keyboard: str = ""            # ID der Tastatur, auf der getippt wurde ("" = ältere Runde)
     # --- nur Phrasen-Modus ---
     phrases: tuple[str, ...] = ()
     repetitions: int | None = None    # Durchgänge; None = unendlich (Esc beendet)

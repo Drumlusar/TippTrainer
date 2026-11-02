@@ -197,11 +197,18 @@ def case_summary(st: Stats) -> tuple[Group, Group]:
             _group(st, lambda c: c.isalpha() and c.islower()))
 
 
-def key_rows(st: Stats) -> dict[str, Group]:
-    """Je Taste (Groß/Klein und Shift-Zeichen zusammengefasst) – für die Tastaturansicht."""
+def key_rows(st: Stats, layout=None) -> dict[str, Group]:
+    """Je Taste (Groß/Klein und Shift-Zeichen zusammengefasst) – für die Tastaturansicht.
+    layout: core.keyboard_layout.Layout (Standard: deutsches QWERTZ). Schlüssel sind die
+    Tasten-IDs des Layouts ("space", "enter" für Leertaste und Enter)."""
+    if layout is None:
+        from core.keyboard_layout import QWERTZ as layout
     keys: dict[str, list[int]] = {}
     for ch, v in st.chars.items():
-        k = keys.setdefault(key_of(ch), [0, 0, 0, 0])
+        key = layout.key_of(ch)
+        if key is None:
+            continue                       # Zeichen gibt es in diesem Layout nicht
+        k = keys.setdefault(key, [0, 0, 0, 0])
         for i in range(4):
             k[i] += v[i]
     return {k: Group(v[0], v[1], v[2] / v[3] if v[3] else None) for k, v in keys.items()}

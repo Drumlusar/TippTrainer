@@ -24,7 +24,7 @@ from ui.progress_tab import ProgressTab
 from ui.stats_tab import StatsTab
 from ui.run_list import (FILTER_ALL, FILTER_DEATH, FILTER_NORMAL, FILTER_PINNED,
                          RunList)
-from ui.widgets import fit_combo
+from ui.widgets import ALL_KEYBOARDS, fill_keyboard_combo, fit_combo
 from ui.training_tab import TrainingTab
 
 TAB_TRAINING, TAB_PHRASES, TAB_HISTORY, TAB_HIGHSCORES = range(4)
@@ -36,6 +36,7 @@ class MenuView(QWidget):
     pin_run_requested = Signal(str, bool)
     unit_changed = Signal(str)
     settings_requested = Signal()
+    keyboard_changed = Signal(str)       # ID der nun aktiven Tastatur
 
     def __init__(self, library: TextLibrary, presets: PresetStore | None = None,
                  penalty: int = config.SCORE_PENALTY,
@@ -55,6 +56,14 @@ class MenuView(QWidget):
                                    "(ein Wort zählt als 5 Anschläge).")
         self.unit_combo.currentTextChanged.connect(self.unit_changed.emit)
         fit_combo(self.unit_combo)
+        self.active_kb_combo = QComboBox()
+        self.active_kb_combo.setToolTip("Tastatur, auf der Sie gerade tippen. Jede Runde wird ihr "
+                                        "zugeordnet; Statistik, Highscores, Fortschritt und Verlauf "
+                                        "lassen sich danach filtern. Verwalten unter Einstellungen.")
+        self.active_kb_combo.activated.connect(
+            lambda _i: self.keyboard_changed.emit(self.active_kb_combo.currentData()))
+        kb_label = QLabel("Tastatur:")
+        kb_label.setObjectName("Hint")
         unit_label = QLabel("Einheit:")
         unit_label.setObjectName("Hint")
         self.settings_btn = QPushButton("Einstellungen …")
@@ -62,15 +71,14 @@ class MenuView(QWidget):
         self.settings_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.settings_btn.clicked.connect(self.settings_requested.emit)
         right = QHBoxLayout()
+        right.addWidget(kb_label)
+        right.addWidget(self.active_kb_combo)
+        right.addSpacing(8)
         right.addWidget(unit_label)
         right.addWidget(self.unit_combo)
         right.addSpacing(8)
         right.addWidget(self.settings_btn)
-        right_w = (unit_label.sizeHint().width() + self.unit_combo.sizeHint().width()
-                   + self.settings_btn.sizeHint().width() + 20)
-        head = QHBoxLayout()
-        head.addSpacing(right_w)                     # Titel optisch mittig
-        head.addStretch(1)
+        head = QHBoxLayout()                         # Titel links, Bedienelemente rechts
         head.addWidget(title)
         head.addStretch(1)
         head.addLayout(right)
@@ -98,6 +106,11 @@ class MenuView(QWidget):
         filter_label.setObjectName("Hint")
         filter_row.addWidget(filter_label)
         filter_row.addWidget(self.filter_combo)
+        self.history_kb_combo = QComboBox()
+        self.history_kb_combo.addItem(ALL_KEYBOARDS, None)
+        self.history_kb_combo.currentIndexChanged.connect(
+            lambda _i: self.run_list.set_keyboard_filter(self.history_kb_combo.currentData()))
+        filter_row.addWidget(self.history_kb_combo)
         filter_row.addStretch(1)
         history = QWidget()
         hl = QVBoxLayout(history)
@@ -159,6 +172,17 @@ class MenuView(QWidget):
     def set_runs(self, runs, penalty: int = config.SCORE_PENALTY,
                  record_whens: set[str] = frozenset()) -> None:
         self.run_list.set_runs(runs, penalty, record_whens)
+
+    def set_keyboards(self, keyboards, active, stats_to_active: bool = False) -> None:
+        """Tastaturen in alle Auswahllisten übernehmen (Kopfzeile, Verlauf, Highscores,
+        Fortschritt, Statistik). active: die aktive Tastatur."""
+        fill_keyboard_combo(self.active_kb_combo, keyboards, with_all=False)
+        self.active_kb_combo.setCurrentIndex(max(0, self.active_kb_combo.findData(active.id)))
+        fill_keyboard_combo(self.history_kb_combo, keyboards)
+        self.run_list.set_keyboard_names({k.id: k.name for k in keyboards})
+        self.highscores.set_keyboards(keyboards)
+        self.progress.set_keyboards(keyboards)
+        self.stats.set_keyboards(keyboards, active.id, active.layout, stats_to_active)
 
     def set_save_warning(self, text: str) -> None:
         self.save_warning.setText(text)

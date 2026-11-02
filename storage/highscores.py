@@ -35,6 +35,7 @@ class Attempt:
     input_mode: str
     dbm: bool
     profile: str = ""
+    keyboard: str = "standard"     # Tastatur-ID; ältere Runden ohne Angabe -> „standard“
 
     def points(self, penalty: int) -> float:
         return score(self.keystrokes, self.mistakes, self.duration_s, penalty)
@@ -67,6 +68,7 @@ def from_row(row: dict[str, str]) -> Attempt | None:
         input_mode=row.get("eingabemodus", ""),
         dbm=row.get("death_by_mistake") == "ja",
         profile=row.get("profil", "") or "",
+        keyboard=row.get("tastatur") or "standard",
     )
 
 
@@ -89,7 +91,8 @@ def profile_attempt(row: dict[str, str]) -> Attempt | None:
     return Attempt(row.get("datum_zeit", ""), profile, keystrokes, errors + corrected, errors,
                    parse_num(row.get("dauer_s", "")), parse_num(row.get("apm_durchschnitt", "")),
                    parse_num(net) if net else None, row.get("eingabemodus", ""),
-                   row.get("death_by_mistake") == "ja", profile)
+                   row.get("death_by_mistake") == "ja", profile,
+                   row.get("tastatur") or "standard")
 
 
 def load_profile_attempts(path: Path = config.HISTORY_FILE) -> list[Attempt]:
@@ -109,11 +112,13 @@ def load_attempts(path: Path = config.HISTORY_FILE) -> list[Attempt]:
 
 
 def filter_attempts(attempts: list[Attempt], input_mode: str | None = None,
-                    dbm: bool | None = None) -> list[Attempt]:
-    """input_mode: z. B. "Computer" oder None (alle); dbm: True/False/None (egal)."""
+                    dbm: bool | None = None, keyboard: str | None = None) -> list[Attempt]:
+    """input_mode: z. B. "Computer" oder None (alle); dbm: True/False/None (egal);
+    keyboard: Tastatur-ID oder None (alle)."""
     return [a for a in attempts
             if (input_mode is None or a.input_mode == input_mode)
-            and (dbm is None or a.dbm == dbm)]
+            and (dbm is None or a.dbm == dbm)
+            and (keyboard is None or a.keyboard == keyboard)]
 
 
 def ranked(attempts: list[Attempt], penalty: int) -> list[Attempt]:

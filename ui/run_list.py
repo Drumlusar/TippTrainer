@@ -51,7 +51,7 @@ def fmt_limit(seconds: int) -> str:
     return f"{seconds // 60} min"
 
 
-def run_lines(run: StoredRun) -> tuple[str, str]:
+def run_lines(run: StoredRun, keyboard_name: str = "") -> tuple[str, str]:
     """Die beiden Textzeilen einer Runde."""
     r = run.result
     s = r.settings
@@ -70,6 +70,8 @@ def run_lines(run: StoredRun) -> tuple[str, str]:
         mode += " · Prüfung"
     if s.profile:                                  # Profilname ersetzt die Detailangaben
         mode = f"Profil: {s.profile}"
+    if keyboard_name:                            # nur bei mehreren Tastaturen angezeigt
+        mode += f" · {keyboard_name}"
     top = f"{run.when:%d.%m. %H:%M}   {mode}"
     bottom = f"{units.fmt(r.cpm_avg, with_unit=True)}  ·  {r.errors} Fehler  ·  "
     return top, bottom
@@ -79,14 +81,15 @@ class RunRow(QFrame):
     clicked = Signal(str)
     pin_toggled = Signal(str, bool)
 
-    def __init__(self, run: StoredRun, penalty: int = 10, is_record: bool = False) -> None:
+    def __init__(self, run: StoredRun, penalty: int = 10, is_record: bool = False,
+                 keyboard_name: str = "") -> None:
         super().__init__()
         self.run_id = run.id
         self.setObjectName("RunRow")
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setToolTip("Klicken: Auswertung anzeigen")
 
-        top, bottom = run_lines(run)
+        top, bottom = run_lines(run, keyboard_name)
         word, color = result_label(run)
         dbm = run.result.settings.death_by_mistake
         self.setProperty("dbm", dbm)                  # roter Rand links (style.qss)
@@ -173,9 +176,19 @@ class RunList(QScrollArea):
         self.empty.setObjectName("Hint")
         self._all: list[StoredRun] = []
         self._filter = FILTER_ALL
+        self._keyboard: str | None = None              # Tastatur-ID, None = alle
+        self._kb_names: dict[str, str] = {}            # ID -> Name (leer = nur eine Tastatur)
         self._penalty = 10
         self._records: set[str] = set()
         self.set_runs([])
+
+    def set_keyboard_filter(self, keyboard_id: str | None) -> None:
+        self._keyboard = keyboard_id
+        self.set_runs(self._all)
+
+    def set_keyboard_names(self, names: dict[str, str]) -> None:
+        """Bei mehr als einer Tastatur steht ihr Name in jeder Zeile."""
+        self._kb_names = names if len(names) > 1 else {}
 
     def set_filter(self, flt: str) -> None:
         self._filter = flt
@@ -188,7 +201,9 @@ class RunList(QScrollArea):
         if record_whens is not None:
             self._records = set(record_whens)
         self._all = list(runs)
-        runs = [r for r in runs if matches_filter(r, self._filter)]
+        runs = [r for r in runs if matches_filter(r, self._filter)
+                and (self._keyboard is None
+                     or (r.result.settings.keyboard or "standard") == self._keyboard)]
         self.empty.setText("Noch keine Runden gespeichert." if not self._all
                            else "Keine Runden für diesen Filter.")
         while self._layout.count():
@@ -203,8 +218,10 @@ class RunList(QScrollArea):
         else:
             self.empty.hide()
             for run in runs:
+                kb = self._kb_names.get(run.result.settings.keyboard or "standard", "gelöschte Tastatur") \
+                    if self._kb_names else ""
                 row = RunRow(run, self._penalty,
-                             run.when.strftime("%Y-%m-%d %H:%M:%S") in self._records)
+                             run.when.strftime("%Y-%m-%d %H:%M:%S") in self._records, kb)
                 row.clicked.connect(self.open_requested.emit)
                 row.pin_toggled.connect(self.pin_toggled.emit)
                 self._layout.addWidget(row)

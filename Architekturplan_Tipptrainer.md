@@ -572,7 +572,30 @@ Jede Phase ist für sich testbar und in kleinen Schritten machbar.
 
 ---
 
-## 17. Mögliche spätere Erweiterungen
+## 17. Erweiterung: Bildschirmtastatur
+
+Einstellung „Bildschirmtastatur“: Aus / Nächste Taste zeigen / Gedrückte Tasten (live) / Beides. Die Tastatur (`ui/keyboard_view.py`) steht unter dem Tipptext.
+- **Layouts** (`core/keyboard_layout.py`, ohne Qt, getestet): QWERTZ (deutsch, ISO: zweizeiliges Enter, kurze linke Shift-Taste), QWERTY (US, ANSI) und Dvorak (US, ANSI), je mit Shift-Belegung, Sondertasten und Tastmarken (F/J bzw. bei Dvorak U/H). Einstellung „Layout“ gilt für Bildschirmtastatur und Tastaturansicht der Statistik; sie ändert nur die Anzeige, das tatsächliche Layout legt das Betriebssystem fest. Zeichen, die es im Layout nicht gibt (z. B. ä auf QWERTY), werden nicht hervorgehoben bzw. in der Statistik-Tastatur nicht gezeigt. `keys_for_char` liefert die nötigen Tasten. Shift nach dem Zehnfingersystem auf der Seite der anderen Hand (A -> rechte Shift-Taste, P -> linke). AltGr-Zeichen je System: Windows/Linux AltGr + Q = @, Mac ⌥ + L = @ usw.
+- **Nächste Taste:** Gold hinterlegt (Taste und ggf. Shift/AltGr), nach jedem Anschlag aktualisiert.
+- **Live:** Jede gedrückte Taste blinkt 0,35 s nach – grün bei richtig, rot bei falsch, Rücktaste neutral. Welche Shift-Taste aufleuchtet, wird aus dem Zeichen abgeleitet, nicht aus der tatsächlich gedrückten Seite. Im Prüfungsmodus blinkt nichts rot.
+
+---
+
+## 18. Erweiterung: Mehrere Tastaturen
+
+**Tastaturen** (`storage/keyboards.py`, in `einstellungen.json`): jede mit fester ID, Namen und Layout, z. B. „MacBook“ (QWERTZ) und „Keychron“ (Dvorak). Die erste Tastatur hat die ID „standard“; ihr gehören alle Runden aus der Zeit vor dieser Funktion. Sie lässt sich umbenennen, aber nicht löschen. Umbenennen ändert nur den Namen, die Zuordnung alter Runden bleibt. Gelöschte Tastaturen: ihre Runden bleiben gespeichert und erscheinen unter „Alle Tastaturen“.
+
+**Aktive Tastatur:** Auswahl oben im Menü (schnell umschalten) und im Einstellungsfenster (dort auch Neu / Umbenennen / Löschen und das Layout je Tastatur). Die Bildschirmtastatur zeigt das Layout der aktiven Tastatur.
+
+**Zuordnung:** Beim Start einer Runde wird die ID der aktiven Tastatur in die Einstellungen der Runde geschrieben (`SessionSettings.keyboard`; gilt nicht als Teil eines Test-Profils). Gespeichert in der CSV-Spalte „tastatur“, in der gespeicherten Auswertung und in der Statistik.
+
+**Statistik:** `statistik.json` Version 2 speichert die Tagessummen je Tastatur; eine Datei im alten Format wird der Tastatur „standard“ zugeordnet und beim nächsten Speichern umgestellt. Der Reiter Statistik zeigt standardmäßig die aktive Tastatur (Auswahl „Alle Tastaturen“ möglich); die Tastaturansicht folgt dem Layout der gewählten Tastatur.
+
+**Filter:** Highscores, Fortschritt und Verlauf haben eine Auswahl „Alle Tastaturen“ / einzelne Tastatur (Standard: alle). Bei mehreren Tastaturen steht ihr Name in jeder Zeile des Verlaufs. Rekorde und der Schutz der Top 10 vor dem Aufräumen gelten weiterhin über alle Tastaturen.
+
+---
+
+## 19. Mögliche spätere Erweiterungen
 
 Diese Punkte gehören nicht zur ersten Version.
 

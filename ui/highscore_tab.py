@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QComboBox, QHBoxLayout,
 import config
 from storage import highscores as hs
 from ui import theme, units
-from ui.widgets import fit_combo, plain_spin
+from ui.widgets import ALL_KEYBOARDS, fill_keyboard_combo, fit_combo, plain_spin
 
 INPUT_FILTERS = [("Eingabe: alle", None), ("Computer", "Computer"),
                  ("Schreibmaschine", "Schreibmaschine")]
@@ -104,7 +104,9 @@ class HighscoreTab(QWidget):
         self.penalty_spin.setSuffix(" Anschläge")
         self.penalty_spin.setToolTip("Punkte = (Anschläge − Strafe × Fehler) / Minuten, nie unter 0.\n"
                                      "Fehler = alle gemachten Fehler, auch korrigierte.")
-        for combo in (self.input_combo, self.dbm_combo):
+        self.kb_combo = QComboBox()
+        self.kb_combo.addItem(ALL_KEYBOARDS, None)
+        for combo in (self.input_combo, self.dbm_combo, self.kb_combo):
             fit_combo(combo)
             combo.currentIndexChanged.connect(self.refresh)
         plain_spin(self.penalty_spin)
@@ -117,6 +119,7 @@ class HighscoreTab(QWidget):
         filters.addSpacing(10)
         filters.addWidget(self.input_combo)
         filters.addWidget(self.dbm_combo)
+        filters.addWidget(self.kb_combo)
         filters.addStretch(1)
         filters.addWidget(pen_label)
         filters.addWidget(self.penalty_spin)
@@ -182,7 +185,10 @@ class HighscoreTab(QWidget):
     def _filtered(self) -> list[hs.Attempt]:
         source = self._profile_attempts if self.profile_view else self._attempts
         return hs.filter_attempts(source, self.input_combo.currentData(),
-                                  self.dbm_combo.currentData())
+                                  self.dbm_combo.currentData(), self.kb_combo.currentData())
+
+    def set_keyboards(self, keyboards) -> None:
+        fill_keyboard_combo(self.kb_combo, keyboards)
 
     def refresh(self) -> None:
         attempts = self._filtered()

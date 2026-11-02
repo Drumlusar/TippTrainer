@@ -9,6 +9,7 @@ Die Oberfläche ist deutsch, geübt werden kann mit deutschen und englischen Tex
 
 - **Drei Textquellen:** zufällige Wörter aus einer Wortliste, ein zufälliger Text aus einer Gruppe, ein bestimmter Text.
 - **Phrasen-Modus:** eigene Zeilen (Wörter, Buchstabenfolgen, Sätze) werden in Schleife geübt, mit Auswertung je Phrase und speicherbaren Presets. Mitgelieferte Vorlagen: die häufigsten Bigramme (Buchstabenpaare) und schwierige Wörter, jeweils Deutsch und Englisch.
+- **Bildschirmtastatur** (Layout QWERTZ, QWERTY oder Dvorak, wahlweise): zeigt die Taste für das nächste Zeichen samt Shift bzw. AltGr/⌥ an oder lässt gedrückte Tasten kurz aufleuchten (grün richtig, rot falsch), oder beides.
 - **Feststelltasten-Hinweis:** Tippen Sie Großbuchstaben ohne Shift, erscheint „FESTSTELLTASTE AKTIV“.
 - **Live-Anzeige:** Tempo in Anschlägen pro Minute (A/min) oder Wörtern pro Minute (W/min = A/min / 5), Fehler und Zeit.
 - **Eingabemodi:** Computer (Backspace erlaubt, korrigierte Fehler zählen weiter mit) oder Schreibmaschine (kein Backspace).
@@ -22,7 +23,8 @@ Die Oberfläche ist deutsch, geübt werden kann mit deutschen und englischen Tex
 - **Highscores** je Text und je Profil, mit Rekord-Hinweis.
 - **Fortschritt:** Tageswerte und 7-Tage-Schnitt je Profil.
 - **Statistik:** Problemzeichen (Groß- und Kleinschreibung getrennt), Verwechslungen, Problemwörter und eine Tastatur-Heatmap. Ausgewählte Problemstellen lassen sich direkt als Phrasen-Preset speichern.
-- **Einstellungen:** Design Dunkel oder Hell, Schriftgröße des Tipptexts und der Oberfläche, Tempo-Cursor.
+- **Einstellungen:** Design Dunkel oder Hell, Schriftgröße des Tipptexts und der Oberfläche, Bildschirmtastatur, Tempo-Cursor.
+- **Mehrere Tastaturen:** benannte Tastaturen (z. B. „MacBook“, „Keychron“) mit eigenem Layout. Jede Runde wird der aktiven Tastatur zugeordnet; Statistik, Highscores, Fortschritt und Verlauf lassen sich je Tastatur anzeigen.
 - **Verlauf:** die letzten Runden mit vollständiger Auswertung; einzelne Runden lassen sich mit ★ dauerhaft speichern.
 
 | Training | Auswertung | Fortschritt |
@@ -75,10 +77,10 @@ Alles bleibt lokal im Ordner `daten/` und ist nicht Teil des Repositorys:
 |---|---|
 | `verlauf/sessions.csv` | Kennzahlen aller Runden (Excel-tauglich: Semikolon, Dezimalkomma) |
 | `verlauf/runs/*.json` | vollständige Auswertung der letzten 20 Runden, der mit ★ markierten und der Top 10 je Text bzw. Profil |
-| `verlauf/statistik.json` | Tagessummen für den Reiter Statistik |
+| `verlauf/statistik.json` | Tagessummen je Tastatur für den Reiter Statistik |
 | `profile.json` | Test-Profile |
 | `phrasen_presets.json` | Phrasen-Presets |
-| `einstellungen.json` | Strafe pro Fehler (für die Punkte), Einheit, Design, Schriftgrößen, Tempo-Cursor |
+| `einstellungen.json` | Strafe pro Fehler (für die Punkte), Einheit, Design, Schriftgrößen, Tastaturen, Bildschirmtastatur, Tempo-Cursor |
 
 ## Aufbau
 

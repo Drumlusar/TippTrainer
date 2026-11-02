@@ -16,20 +16,16 @@ import config
 from core import char_stats as cs
 from storage.presets import PresetStore
 from storage.stats_store import StatsStore
+from core.keyboard_layout import HEIGHT_UNITS, MODIFIERS, WIDTH_UNITS, get_layout
 from ui import theme
 from ui.highscore_tab import SortItem, make_table
-from ui.widgets import fit_combo
+from ui.widgets import fill_keyboard_combo, fit_combo
 
 PERIODS = [("Letzte 7 Tage", 7), ("Letzte 30 Tage", 30), ("Gesamt", None)]
 KEY_MODES = ["Tastatur: Fehlerquote", "Tastatur: Tempo"]
 
 
-ROWS = [
-    (0.0, "^1234567890ß"),
-    (0.5, "qwertzuiopü+"),
-    (0.75, "asdfghjklöä#"),
-    (0.25, "<yxcvbnm,.-"),
-]
+KEY_NAMES = {"space": "Leertaste", "enter": "Enter"}
 
 
 def _mix(a: QColor, b: QColor, t: float) -> QColor:
@@ -40,7 +36,7 @@ def _mix(a: QColor, b: QColor, t: float) -> QColor:
 
 
 class KeyboardHeatmap(QWidget):
-    """QWERTZ-Tastatur; Tasten nach Fehlerquote bzw. Verlangsamung eingefärbt
+    """Tastatur im gewählten Layout; Tasten nach Fehlerquote bzw. Verlangsamung eingefärbt
     (eine Farbe, dunkel = unauffällig, kräftig = auffällig). Tooltip mit Zahlen."""
 
     def __init__(self, parent=None) -> None:
@@ -52,6 +48,7 @@ class KeyboardHeatmap(QWidget):
         self.keys: dict[str, cs.Group] = {}
         self.avg_ms: float | None = None
         self._rects: dict[str, QRectF] = {}
+        self.layout = get_layout("qwertz")
 
     def set_data(self, keys: dict[str, cs.Group], avg_ms: float | None, mode: int) -> None:
         self.keys, self.avg_ms, self.mode = keys, avg_ms, mode
@@ -71,11 +68,10 @@ class KeyboardHeatmap(QWidget):
     def paintEvent(self, _event) -> None:
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        units = 13.0
-        size = min((self.width() - 10) / units, (self.height() - 10) / 5.2)
+        size = min((self.width() - 10) / WIDTH_UNITS, (self.height() - 10) / HEIGHT_UNITS)
         gap = size * 0.1
-        left = (self.width() - units * size) / 2
-        top = (self.height() - 5 * size) / 2
+        left = (self.width() - WIDTH_UNITS * size) / 2
+        top = (self.height() - HEIGHT_UNITS * size) / 2
         label_font = QFont(self.font())
         label_font.setPixelSize(max(10, int(size * 0.36)))
         small = QFont(self.font())
@@ -84,9 +80,13 @@ class KeyboardHeatmap(QWidget):
         key_base, key_nodata = theme.color("surface"), theme.color("key_nodata")
         self._rects = {}
 
-        def draw(key: str, rect: QRectF, label: str) -> None:
-            self._rects[key] = rect
-            intensity, text = self._value(self.keys.get(key))
+        for k in self.layout.keys:
+            if k.id in MODIFIERS:                     # Shift, Tab … werden nicht ausgewertet
+                continue
+            rect = QRectF(left + k.x * size + gap / 2, top + k.y * size + gap / 2,
+                          k.w * size - gap, k.h * size - gap)
+            self._rects[k.id] = rect
+            intensity, text = self._value(self.keys.get(k.id))
             color = key_nodata if intensity is None else _mix(key_base, high, intensity)
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(color)
@@ -95,20 +95,11 @@ class KeyboardHeatmap(QWidget):
             p.setPen(theme.color("accent_ink") if dark_text
                      else theme.color("ink" if intensity is not None else "dim"))
             p.setFont(label_font)
+            label = KEY_NAMES.get(k.id, k.label)
             p.drawText(rect.adjusted(5, 2, -3, -2), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop, label)
             if text:
                 p.setFont(small)
                 p.drawText(rect.adjusted(3, 2, -4, -3), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom, text)
-
-        for row, (offset, chars) in enumerate(ROWS):
-            for i, ch in enumerate(chars):
-                x = left + (offset + i) * size
-                y = top + row * size
-                draw(ch, QRectF(x + gap / 2, y + gap / 2, size - gap, size - gap), ch.upper() if ch.isalpha() and len(ch.upper()) == 1 else ch)
-        # Enter rechts neben der zweiten Reihe, Leertaste unten
-        x = left + (0.75 + 12) * size
-        draw("\n", QRectF(x + gap / 2, top + 1 * size + gap / 2, size * 1.25 - gap, size * 2 - gap), "Enter")
-        draw(" ", QRectF(left + 3.5 * size + gap / 2, top + 4 * size + gap / 2, size * 6 - gap, size - gap), "Leertaste")
         p.end()
 
     def mouseMoveEvent(self, event) -> None:
@@ -116,7 +107,8 @@ class KeyboardHeatmap(QWidget):
         for key, rect in self._rects.items():
             if rect.contains(pos):
                 g = self.keys.get(key)
-                name = cs.char_label(key)
+                k = self.layout.key_by_id.get(key)
+                name = KEY_NAMES.get(key, k.label if k else key)
                 if g is None or g.keys == 0:
                     tip = f"{name}: noch keine Daten"
                 else:
@@ -141,13 +133,18 @@ class StatsTab(QWidget):
             self.period_combo.addItem(label, days)
         self.key_combo = QComboBox()
         self.key_combo.addItems(KEY_MODES)
-        for combo in (self.period_combo, self.key_combo):
+        self.kb_combo = QComboBox()                # Tastatur (Standard: die aktive)
+        self.kb_combo.setToolTip("Statistik einer Tastatur oder aller zusammen")
+        self._keyboards: list = []
+        self._active_layout = "qwertz"
+        for combo in (self.period_combo, self.key_combo, self.kb_combo):
             fit_combo(combo)
             combo.currentIndexChanged.connect(self.refresh)
         self.summary = QLabel()
         self.summary.setObjectName("Hint")
         self.summary.setWordWrap(True)
         top = QHBoxLayout()
+        top.addWidget(self.kb_combo)
         top.addWidget(self.period_combo)
         top.addWidget(self.key_combo)
         top.addSpacing(12)
@@ -208,10 +205,30 @@ class StatsTab(QWidget):
 
     # --- Daten ------------------------------------------------------------------------
 
+    def set_keyboards(self, keyboards, active_id: str, active_layout: str,
+                      select_active: bool = False) -> None:
+        """Tastaturen für die Auswahl; beim ersten Aufruf (oder select_active) wird die
+        aktive Tastatur gewählt – die Statistik ist dann standardmäßig getrennt."""
+        first = self.kb_combo.count() == 0
+        self._keyboards = list(keyboards)
+        self._active_layout = active_layout
+        if first or select_active:
+            self.kb_combo.clear()
+        fill_keyboard_combo(self.kb_combo, keyboards, select=active_id)
+        self.refresh()
+
+    def _layout_id(self) -> str:
+        """Layout der gewählten Tastatur; bei „Alle Tastaturen“ das der aktiven."""
+        kb = next((k for k in self._keyboards if k.id == self.kb_combo.currentData()), None)
+        return kb.layout if kb else self._active_layout
+
     def refresh(self) -> None:
-        st = self.store.load(self.period_combo.currentData())
+        self.keyboard.layout = get_layout(self._layout_id())
+        st = self.store.load(self.period_combo.currentData(),
+                             keyboard=self.kb_combo.currentData() if self.kb_combo.count() else None)
         avg = cs.overall_avg_ms(st)
-        self.keyboard.set_data(cs.key_rows(st), avg, self.key_combo.currentIndex())
+        self.keyboard.set_data(cs.key_rows(st, self.keyboard.layout), avg,
+                               self.key_combo.currentIndex())
 
         total = sum(v[0] for v in st.chars.values())
         if total == 0:

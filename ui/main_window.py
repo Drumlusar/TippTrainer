@@ -19,6 +19,7 @@ from storage.app_settings import AppSettings
 from storage.stats_store import StatsStore
 from core.models import SourceMode
 from storage.presets import PresetStore
+from storage.keyboards import KeyboardStore
 from storage.profiles import ProfileStore
 from storage.run_store import RunStore
 from ui import theme, units
@@ -53,6 +54,7 @@ class MainWindow(QMainWindow):
         self.stats_store = stats_store if stats_store is not None else StatsStore()
         units.set_unit(self.settings.unit)
         theme.set_theme(self.settings.design)          # vor dem Aufbau der Ansichten
+        self.keyboards = KeyboardStore(self.settings)
         self.profiles = profiles if profiles is not None else ProfileStore()
         self.menu = MenuView(self.library, presets, self.settings.penalty, self.stats_store,
                              self.profiles, history_file)
@@ -72,6 +74,7 @@ class MainWindow(QMainWindow):
         self.menu.highscores.open_profile_attempt.connect(self.open_profile_attempt)
         self.menu.unit_changed.connect(self.set_unit)
         self.menu.settings_requested.connect(self.open_settings)
+        self.menu.keyboard_changed.connect(self.set_active_keyboard)
         self.apply_appearance()
         self.menu.highscores.penalty_changed.connect(self.set_penalty)
         self.typing.finished.connect(self.on_finished)
@@ -90,7 +93,8 @@ class MainWindow(QMainWindow):
     def start_session(self, settings) -> None:
         # Profil immer frisch bestimmen: ein inzwischen geändertes oder gelöschtes Profil
         # soll einer wiederholten alten Runde nicht mehr anhaften.
-        settings = replace(settings, profile=self.profiles.matching(settings))
+        settings = replace(settings, profile=self.profiles.matching(settings),
+                           keyboard=self.keyboards.active().id)   # Runde zählt für diese Tastatur
         self._run(lambda: self.controller.start(settings))
 
     def restart_shown(self) -> None:
@@ -135,7 +139,7 @@ class MainWindow(QMainWindow):
         stats = None
         if history.should_save(r) and r.settings.source_mode is not SourceMode.PHRASES:
             stats = self.controller.typing_stats()
-            self.stats_store.add(when.date(), stats)
+            self.stats_store.add(when.date(), stats, keyboard=r.settings.keyboard)
         protected = self._protected()
         run_id = self.runs.save(r, when, protected, stats)
         run_ok = run_id is not None
@@ -181,7 +185,8 @@ class MainWindow(QMainWindow):
         run = self.runs.load(self.shown_run_id) if self.shown_run_id else None
         if run is None or run.stats is None or run.in_stats == include:
             return
-        if self.stats_store.add(run.when.date(), run.stats, 1 if include else -1):
+        if self.stats_store.add(run.when.date(), run.stats, 1 if include else -1,
+                                keyboard=run.result.settings.keyboard):
             self.runs.set_in_stats(run.id, include)
 
     # --- Highscores --------------------------------------------------------------------
@@ -227,14 +232,27 @@ class MainWindow(QMainWindow):
             app.setStyleSheet(theme.load_stylesheet(scale))
         self.typing.display.set_font_size(s.text_size)
         self.typing.display.pace_cpm = s.pace_cpm if s.pace_on else None
+        self.typing.keyboard.set_mode(s.keyboard_mode)
+        self.typing.keyboard.set_layout(self.keyboards.active().layout)
         self.result.text_pt = max(10, round(14 * scale))
 
     def open_settings(self) -> None:
-        dlg = SettingsDialog(self.settings, self)
+        dlg = SettingsDialog(self.settings, self.keyboards, self)
         if dlg.exec() == QDialog.DialogCode.Accepted:
             dlg.save()
             self.apply_appearance()
+            self._sync_keyboards(stats_to_active=True)
             self.show_menu()              # Listen und Diagramme in neuen Farben neu aufbauen
+        else:
+            self._sync_keyboards()        # Tastaturen können auch ohne „Übernehmen“ neu sein
+
+    def set_active_keyboard(self, keyboard_id: str) -> None:
+        self.keyboards.set_active(keyboard_id)
+        self.apply_appearance()           # Layout der Bildschirmtastatur
+        self._sync_keyboards(stats_to_active=True)
+
+    def _sync_keyboards(self, stats_to_active: bool = False) -> None:
+        self.menu.set_keyboards(self.keyboards.all(), self.keyboards.active(), stats_to_active)
 
     def set_unit(self, unit: str) -> None:
         units.set_unit(unit)
@@ -279,6 +297,7 @@ class MainWindow(QMainWindow):
             self.library = TextLibrary.load()
             self.controller.library = self.library
             self.menu.set_library(self.library)
+        self._sync_keyboards()
         attempts = self._refresh_runs()
         self.menu.stats.refresh()
         names = self.profiles.names()

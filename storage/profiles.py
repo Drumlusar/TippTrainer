@@ -19,7 +19,7 @@ import config
 from core.models import InputMode, SessionSettings, SourceMode, settings_from_dict, settings_to_dict
 
 # Felder, die zu einer Runde gehören, nicht zum Profil
-_RUN_ONLY = ("seed", "profile")
+_RUN_ONLY = ("seed", "profile", "keyboard")
 
 
 def _online(seconds: int, wordlist: str = "englisch_200.txt") -> SessionSettings:
